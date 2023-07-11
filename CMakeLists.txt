@@ -1,0 +1,10 @@
+DISABLE_MISSING_PROFILE_WARNING()
+ADD_DEFINITIONS(-DMYSQL_SERVER)
+
+FILE(GLOB avid_handler_src "*.cc" "*.h")
+
+MYSQL_ADD_PLUGIN(avid ${avid_handler_src}
+  STORAGE_ENGINE
+  MODULE_ONLY
+  LINK_LIBRARIES ext::zlib
+  )
