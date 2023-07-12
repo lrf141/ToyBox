@@ -53,6 +53,7 @@
 class Avid_share : public Handler_share {
  public:
   THR_LOCK lock;
+  File tableFile;
   Avid_share();
   ~Avid_share() override { thr_lock_delete(&lock); }
 };
