@@ -739,14 +739,19 @@ static MYSQL_THDVAR_UINT(create_count_thdvar, 0, nullptr, nullptr, nullptr, 0,
 
 int ha_avid::create(const char *name, TABLE *, HA_CREATE_INFO *,
                        dd::Table *) {
+
   DBUG_TRACE;
-  /*
-    This is not implemented but we want someone to be able to see that it
-    works.
-  */
+  File tableFile;
+  if ((tableFile = my_create(name, 0, O_RDWR | O_TRUNC, MYF(0))) < 0) {
+    return -1;
+  }
+  if ((my_close(tableFile, MYF(0))) < 0) {
+    return -2;
+  }
+
 
   /*
-    It's just an avid of THDVAR_SET() usage below.
+    It's just an example of THDVAR_SET() usage below.
   */
   THD *thd = ha_thd();
   char *buf = (char *)my_malloc(PSI_NOT_INSTRUMENTED, SHOW_VAR_FUNC_BUFF_SIZE,
@@ -887,7 +892,7 @@ static SHOW_VAR func_status[] = {
 mysql_declare_plugin(avid){
     MYSQL_STORAGE_ENGINE_PLUGIN,
     &avid_storage_engine,
-    "EXAMPLE",
+    "AVID",
     PLUGIN_AUTHOR_ORACLE,
     "Avid storage engine",
     PLUGIN_LICENSE_GPL,
