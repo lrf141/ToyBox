@@ -1,0 +1,11 @@
+//
+// Created by lrf141 on 23/07/13.
+//
+
+#ifndef MYSQL_AVID_ERRORNO_H
+#define MYSQL_AVID_ERRORNO_H
+
+#define CANNOT_CREATE_TABLE_FILE -1
+#define CANNOT_CLOSE_TABLE_FILE -2
+
+#endif  // MYSQL_AVID_ERRORNO_H
