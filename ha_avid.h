@@ -73,7 +73,7 @@ class ha_avid : public handler {
   /** @brief
     The name that will be used for display purposes.
    */
-  const char *table_type() const override { return "EXAMPLE"; }
+  const char *table_type() const override { return "AVID"; }
 
   /**
     Replace key algorithm with one supported by SE, return the default key
