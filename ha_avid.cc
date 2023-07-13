@@ -91,16 +91,30 @@
   Happy coding!<br>
     -Brian
 */
+#include <mysql/plugin.h>
+#include <mysql/psi/mysql_file.h>
+#include <algorithm>
 
 #include "storage/avid/ha_avid.h"
 #include "avid_errorno.h"
 
 #include "fileUtil.h"
 #include "my_dbug.h"
-#include "mysql/plugin.h"
 #include "sql/sql_class.h"
 #include "sql/sql_plugin.h"
 #include "typelib.h"
+
+static PSI_file_key key_file_data;
+static PSI_file_info all_avid_files[] = {
+    {&key_file_data, "data", 0, 0, PSI_DOCUMENT_ME}
+};
+
+static void init_avid_psi_keys() {
+    const char *category = "json";
+    int count = static_cast<int>(array_elements(all_avid_files));
+    mysql_file_register(category, all_avid_files, count);
+}
+
 
 static handler *avid_create_handler(handlerton *hton, TABLE_SHARE *table,
                                        bool partitioned, MEM_ROOT *mem_root);
@@ -116,6 +130,8 @@ Avid_share::Avid_share() { thr_lock_init(&lock); }
 
 static int avid_init_func(void *p) {
   DBUG_TRACE;
+
+  init_avid_psi_keys();
 
   avid_hton = (handlerton *)p;
   avid_hton->state = SHOW_OPTION_YES;
@@ -751,11 +767,27 @@ int ha_avid::create(const char *name, TABLE *, HA_CREATE_INFO *,
                        dd::Table *) {
 
   DBUG_TRACE;
+  THD *thd = this->ha_thd();
+  char tableFilePath[FN_REFLEN];
   File tableFile;
-  if ((tableFile = FileUtil::create(name, 0, O_RDWR | O_TRUNC, MYF(0))) < 0) {
+
+  if (thd_sql_command(thd) == SQLCOM_TRUNCATE) {
+    // TRUNCATE TABLE
+    mysql_file_delete(key_file_data, get_share()->tableFilePath, MYF(0));
+  }
+
+  if ((tableFile =
+           mysql_file_create(key_file_data,
+                             fn_format(
+                                 tableFilePath, name, "", ".json", MY_REPLACE_EXT | MY_UNPACK_FILENAME
+                                 ),
+                             0, O_RDWR | O_TRUNC, MYF(MY_WME))) < 0) {
     return CANNOT_CREATE_TABLE_FILE;
   }
-  if ((FileUtil::close(tableFile, MYF(0))) < 0) {
+
+  strcpy(get_share()->tableFilePath, tableFilePath);
+
+  if ((mysql_file_close(tableFile, MYF(0))) < 0) {
     return CANNOT_CLOSE_TABLE_FILE;
   }
 
