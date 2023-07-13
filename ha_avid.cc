@@ -95,6 +95,7 @@
 #include "storage/avid/ha_avid.h"
 #include "avid_errorno.h"
 
+#include "fileUtil.h"
 #include "my_dbug.h"
 #include "mysql/plugin.h"
 #include "sql/sql_class.h"
@@ -751,10 +752,10 @@ int ha_avid::create(const char *name, TABLE *, HA_CREATE_INFO *,
 
   DBUG_TRACE;
   File tableFile;
-  if ((tableFile = my_create(name, 0, O_RDWR | O_TRUNC, MYF(0))) < 0) {
+  if ((tableFile = FileUtil::create(name, 0, O_RDWR | O_TRUNC, MYF(0))) < 0) {
     return CANNOT_CREATE_TABLE_FILE;
   }
-  if ((my_close(tableFile, MYF(0))) < 0) {
+  if ((FileUtil::close(tableFile, MYF(0))) < 0) {
     return CANNOT_CLOSE_TABLE_FILE;
   }
 
