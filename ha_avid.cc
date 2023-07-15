@@ -102,6 +102,7 @@
 #include "my_dbug.h"
 #include "sql/sql_class.h"
 #include "sql/sql_plugin.h"
+#include "table_file.h"
 #include "typelib.h"
 
 static PSI_file_key key_file_data;
@@ -769,27 +770,28 @@ int ha_avid::create(const char *name, TABLE *, HA_CREATE_INFO *,
   DBUG_TRACE;
   THD *thd = this->ha_thd();
   char tableFilePath[FN_REFLEN];
-  File tableFile;
 
   if (thd_sql_command(thd) == SQLCOM_TRUNCATE) {
     // TRUNCATE TABLE
-    mysql_file_delete(key_file_data, get_share()->tableFilePath, MYF(0));
+    strcpy(tableFilePath, get_share()->tableFilePath);
+    int err = TableFileImpl::truncate(
+        key_file_data, name, tableFilePath
+        );
+    if (err > 0) {
+      return err;
+    }
+    strcpy(get_share()->tableFilePath, tableFilePath);
   }
 
-  if ((tableFile =
-           mysql_file_create(key_file_data,
-                             fn_format(
-                                 tableFilePath, name, "", ".json", MY_REPLACE_EXT | MY_UNPACK_FILENAME
-                                 ),
-                             0, O_RDWR | O_TRUNC, MYF(MY_WME))) < 0) {
-    return CANNOT_CREATE_TABLE_FILE;
+  int err = TableFileImpl::create(
+      key_file_data,
+      name,
+      tableFilePath
+      );
+  if (err > 0) {
+    return -1;
   }
-
   strcpy(get_share()->tableFilePath, tableFilePath);
-
-  if ((mysql_file_close(tableFile, MYF(0))) < 0) {
-    return CANNOT_CLOSE_TABLE_FILE;
-  }
 
   return 0;
 }
