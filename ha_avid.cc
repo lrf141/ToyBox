@@ -234,7 +234,7 @@ static bool avid_is_supported_system_table(const char *db,
   handler::ha_open() in handler.cc
 */
 
-int ha_avid::open(const char *name, int, uint, const dd::Table *) {
+int ha_avid::open(const char *, int, uint, const dd::Table *) {
   DBUG_TRACE;
 
   File tableFile;
@@ -242,7 +242,7 @@ int ha_avid::open(const char *name, int, uint, const dd::Table *) {
   if (!(share = get_share())) return 1;
   thr_lock_data_init(&share->lock, &lock, nullptr);
 
-  if (!(tableFile = my_open(name, O_RDWR, MYF(0)))) {
+  if (!(tableFile = TableFileImpl::open(key_file_data, share->tableFilePath))) {
     return CANNOT_OPEN_TABLE_FILE;
   }
 

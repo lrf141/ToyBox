@@ -7,6 +7,7 @@ class TableFileImpl {
  public:
    static int create(PSI_file_key key, const char *name, char *filePath);
    static int truncate(PSI_file_key key, const char *name, char *filePath);
+   static File open(PSI_file_key key, const char *filePath);
 };
 
 #endif  // MYSQL_TABLE_FILE_H

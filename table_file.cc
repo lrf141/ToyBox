@@ -38,3 +38,6 @@ int TableFileImpl::truncate(PSI_file_key key, const char *name, char *filePath) 
 
   return 0;
 }
+File TableFileImpl::open(PSI_file_key key, const char *filePath) {
+  return mysql_file_open(key, filePath, O_RDWR, MYF(0));
+}
