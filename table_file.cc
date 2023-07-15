@@ -19,6 +19,7 @@ int TableFileImpl::create(PSI_file_key key, const char *name, char *filePath) {
 
 
 int TableFileImpl::truncate(PSI_file_key key, const char *name, char *filePath) {
+  // TODO: reset SDI
   File newTableFile;
   int err = FileUtil::remove(key, filePath, MYF(0));
   if (err < 0) {
