@@ -9,7 +9,7 @@ class FileUtil
  public:
   static File create(PSI_file_key key, const char *name, char *filePath, const char *fileExt, int srcLine, int createFlag, myf myfFlag);
   static int close(File file, myf flags);
-  static int remove(PSI_file_key key, char *filePath, myf flags);
+  static int remove(PSI_file_key key, const char *filePath, myf flags);
 
  private:
   FileUtil() {}

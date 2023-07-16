@@ -19,6 +19,6 @@ int FileUtil::close(File file, myf my_flags) {
   return mysql_file_close(file, my_flags);
 }
 
-int FileUtil::remove(PSI_file_key key, char *filePath, myf flags) {
+int FileUtil::remove(PSI_file_key key, const char *filePath, myf flags) {
   return mysql_file_delete(key, filePath, flags);
 }

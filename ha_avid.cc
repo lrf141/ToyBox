@@ -268,7 +268,7 @@ int ha_avid::open(const char *, int, uint, const dd::Table *) {
 
 int ha_avid::close(void) {
   DBUG_TRACE;
-  return 0;
+  return TableFileImpl::close(get_share()->tableFile);
 }
 
 /**
@@ -695,9 +695,14 @@ THR_LOCK_DATA **ha_avid::store_lock(THD *, THR_LOCK_DATA **to,
   @see
   delete_table and ha_create_table() in handler.cc
 */
-int ha_avid::delete_table(const char *, const dd::Table *) {
+int ha_avid::delete_table(const char *from, const dd::Table *) {
+  // from variable is path to table file.
+  // ex) ./[database name]/[table file]
   DBUG_TRACE;
-  /* This is not implemented but we want someone to be able that it works. */
+  int err = TableFileImpl::remove(key_file_data, from);
+  if (err != 0) {
+    return CANNOT_DELETE_TABLE_FILE;
+  }
   return 0;
 }
 
