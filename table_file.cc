@@ -1,25 +1,18 @@
 #include "table_file.h"
 #include "avid_errorno.h"
 #include "file_util.h"
-#include "my_io.h"
 
-int TableFileImpl::create(PSI_file_key key, const char *tableFilePath) {
-  File tableFile;
-  tableFile = FileUtil::create(key, tableFilePath, 0, O_RDWR | O_TRUNC, MYF(0));
-  if (tableFile < 0) {
+File TableFileImpl::create(PSI_file_key key, const char *tableFilePath) {
+  File newTableFile;
+  newTableFile = FileUtil::create(key, tableFilePath, 0, O_RDWR | O_TRUNC, MYF(0));
+  if (newTableFile < 0) {
     return CANNOT_CREATE_TABLE_FILE;
   }
-
-  int err = FileUtil::close(tableFile, MYF(0));
-  if (err < 0) {
-    return CANNOT_CLOSE_TABLE_FILE;
-  }
-
-  return 0;
+  return newTableFile;
 }
 
 
-int TableFileImpl::truncate(PSI_file_key key, const char *tableFilePath) {
+File TableFileImpl::truncate(PSI_file_key key, const char *tableFilePath) {
   // TODO: reset SDI
   File newTableFile;
   int err = FileUtil::remove(key, tableFilePath, MYF(0));
@@ -32,12 +25,7 @@ int TableFileImpl::truncate(PSI_file_key key, const char *tableFilePath) {
     return CANNOT_CREATE_TABLE_FILE;
   }
 
-  err = FileUtil::close(newTableFile, MYF(0));
-  if (err < 0) {
-    return CANNOT_CLOSE_TABLE_FILE;
-  }
-
-  return 0;
+  return newTableFile;
 }
 File TableFileImpl::open(PSI_file_key key, const char *tableFilePath) {
   return mysql_file_open(key, tableFilePath, O_RDWR, MYF(0));

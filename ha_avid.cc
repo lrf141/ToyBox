@@ -779,27 +779,30 @@ static MYSQL_THDVAR_UINT(create_count_thdvar, 0, nullptr, nullptr, nullptr, 0,
  */
 int ha_avid::create(const char *name, TABLE *, HA_CREATE_INFO *,
                        dd::Table *) {
-
   DBUG_TRACE;
   THD *thd = this->ha_thd();
   char tableFilePath[FN_REFLEN];
+  File newTableFile;
+
   FileUtil::convertToTableFilePath(tableFilePath, name, ".json");
 
+  // TRUNCATE TABLE
   if (thd_sql_command(thd) == SQLCOM_TRUNCATE) {
-    // TRUNCATE TABLE
-    int err = TableFileImpl::truncate(key_file_data, tableFilePath);
-    if (err > 0) {
+    newTableFile = TableFileImpl::truncate(key_file_data, tableFilePath);
+    if (newTableFile < 0) {
       return -1;
     }
   } else {
-    int err = TableFileImpl::create(key_file_data, tableFilePath);
-    if (err > 0) {
+    newTableFile = TableFileImpl::create(key_file_data, tableFilePath);
+    if (newTableFile < 0) {
       return -1;
     }
   }
   strcpy(get_share()->tableFilePath, tableFilePath);
 
-  return 0;
+  int err = TableFileImpl::close(newTableFile);
+
+  return err;
 }
 
 struct st_mysql_storage_engine avid_storage_engine = {
