@@ -235,19 +235,22 @@ static bool avid_is_supported_system_table(const char *db,
 */
 
 // const char *name is './[db name]/[tbl name]'
-int ha_avid::open(const char *, int, uint, const dd::Table *) {
+int ha_avid::open(const char *name, int, uint, const dd::Table *) {
   DBUG_TRACE;
 
   File tableFile;
+  char tableFilePath[FN_REFLEN];
+  FileUtil::convertToTableFilePath(tableFilePath, name, ".json");
 
   if (!(share = get_share())) return 1;
   thr_lock_data_init(&share->lock, &lock, nullptr);
 
-  if (!(tableFile = TableFileImpl::open(key_file_data, share->tableFilePath))) {
+  tableFile = TableFileImpl::open(key_file_data, tableFilePath);
+  if (tableFile < 0) {
     return CANNOT_OPEN_TABLE_FILE;
   }
-
   share->tableFile = tableFile;
+  strcpy(share->tableFilePath, tableFilePath);
 
   return 0;
 }
