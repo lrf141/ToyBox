@@ -234,6 +234,7 @@ static bool avid_is_supported_system_table(const char *db,
   handler::ha_open() in handler.cc
 */
 
+// const char *name is './[db name]/[tbl name]'
 int ha_avid::open(const char *, int, uint, const dd::Table *) {
   DBUG_TRACE;
 
@@ -769,6 +770,11 @@ static MYSQL_THDVAR_UINT(create_count_thdvar, 0, nullptr, nullptr, nullptr, 0,
   ha_create_table() in handle.cc
 */
 
+/**
+ * create table and truncate table
+ * @param name ex) './[db name]/[tbl name]' without ext
+ * @return
+ */
 int ha_avid::create(const char *name, TABLE *, HA_CREATE_INFO *,
                        dd::Table *) {
 
