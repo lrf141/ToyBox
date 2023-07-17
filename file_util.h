@@ -1,5 +1,5 @@
-#ifndef MYSQL_FILEUTIL_H
-#define MYSQL_FILEUTIL_H
+#ifndef MYSQL_FILE_UTIL_H
+#define MYSQL_FILE_UTIL_H
 
 #include "my_inttypes.h"
 #include "mysql/components/services/bits/psi_file_bits.h"
@@ -16,4 +16,4 @@ class FileUtil
   ~FileUtil() {}
 };
 
-#endif  // MYSQL_FILEUTIL_H
+#endif  // MYSQL_FILE_UTIL_H

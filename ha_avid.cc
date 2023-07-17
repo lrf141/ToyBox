@@ -98,7 +98,7 @@
 #include "storage/avid/ha_avid.h"
 #include "avid_errorno.h"
 
-#include "fileUtil.h"
+#include "file_util.h"
 #include "my_dbug.h"
 #include "sql/sql_class.h"
 #include "sql/sql_plugin.h"

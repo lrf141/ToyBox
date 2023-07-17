@@ -1,6 +1,6 @@
 #include "table_file.h"
 #include "avid_errorno.h"
-#include "fileUtil.h"
+#include "file_util.h"
 #include "my_io.h"
 
 int TableFileImpl::create(PSI_file_key key, const char *name, char *filePath) {
