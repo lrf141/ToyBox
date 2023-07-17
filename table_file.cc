@@ -3,9 +3,9 @@
 #include "file_util.h"
 #include "my_io.h"
 
-int TableFileImpl::create(PSI_file_key key, const char *name, char *filePath) {
+int TableFileImpl::create(PSI_file_key key, const char *tableFilePath) {
   File tableFile;
-  tableFile = FileUtil::create(key, name, filePath, ".json", 0, O_RDWR | O_TRUNC, MYF(0));
+  tableFile = FileUtil::create(key, tableFilePath, 0, O_RDWR | O_TRUNC, MYF(0));
   if (tableFile < 0) {
     return CANNOT_CREATE_TABLE_FILE;
   }
@@ -19,15 +19,15 @@ int TableFileImpl::create(PSI_file_key key, const char *name, char *filePath) {
 }
 
 
-int TableFileImpl::truncate(PSI_file_key key, const char *name, char *filePath) {
+int TableFileImpl::truncate(PSI_file_key key, const char *tableFilePath) {
   // TODO: reset SDI
   File newTableFile;
-  int err = FileUtil::remove(key, filePath, MYF(0));
+  int err = FileUtil::remove(key, tableFilePath, MYF(0));
   if (err < 0) {
     return CANNOT_DELETE_TABLE_FILE;
   }
 
-  newTableFile = FileUtil::create(key, name, filePath, ".json", 0, O_RDWR | O_TRUNC, MYF(0));
+  newTableFile = FileUtil::create(key, tableFilePath, 0, O_RDWR | O_TRUNC, MYF(0));
   if (newTableFile < 0) {
     return CANNOT_CREATE_TABLE_FILE;
   }
@@ -39,15 +39,11 @@ int TableFileImpl::truncate(PSI_file_key key, const char *name, char *filePath) 
 
   return 0;
 }
-File TableFileImpl::open(PSI_file_key key, const char *filePath) {
-  return mysql_file_open(key, filePath, O_RDWR, MYF(0));
+File TableFileImpl::open(PSI_file_key key, const char *tableFilePath) {
+  return mysql_file_open(key, tableFilePath, O_RDWR, MYF(0));
 }
 
-int TableFileImpl::remove(PSI_file_key key, const char *filePath) {
-  char tableFilePath[FN_REFLEN];
-  fn_format(
-                 tableFilePath, filePath, "", ".json", MY_REPLACE_EXT | MY_UNPACK_FILENAME
-                 );
+int TableFileImpl::remove(PSI_file_key key, const char *tableFilePath) {
   return FileUtil::remove(key, tableFilePath, MYF(0));
 }
 

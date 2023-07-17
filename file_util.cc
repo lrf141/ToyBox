@@ -6,19 +6,18 @@
 #include <mysql/psi/mysql_file.h>
 
 
-File FileUtil::create(PSI_file_key key, const char *name, char *filePath, const char *fileExt, int srcLine,
-                      int createFlag, myf myfFlag) {
-  return mysql_file_create(key,
-                           fn_format(
-                               filePath, name, "", fileExt, MY_REPLACE_EXT | MY_UNPACK_FILENAME
-                               ),
-                           srcLine, createFlag, myfFlag);
+File FileUtil::create(PSI_file_key key, const char *tableFilePath, int srcLine, int createFlag, myf myfFlag) {
+  return mysql_file_create(key, tableFilePath, srcLine, createFlag, myfFlag);
 }
 
 int FileUtil::close(File file, myf my_flags) {
   return mysql_file_close(file, my_flags);
 }
 
-int FileUtil::remove(PSI_file_key key, const char *filePath, myf flags) {
-  return mysql_file_delete(key, filePath, flags);
+int FileUtil::remove(PSI_file_key key, const char *tableFilePath, myf flags) {
+  return mysql_file_delete(key, tableFilePath, flags);
+}
+
+void FileUtil::convertToTableFilePath(char *tableFilePath, const char *name, const char *ext) {
+  fn_format(tableFilePath, name, "", ext, MY_REPLACE_EXT | MY_UNPACK_FILENAME);
 }

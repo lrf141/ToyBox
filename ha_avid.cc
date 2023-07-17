@@ -700,7 +700,9 @@ int ha_avid::delete_table(const char *from, const dd::Table *) {
   // from variable is path to table file.
   // ex) ./[database name]/[table file]
   DBUG_TRACE;
-  int err = TableFileImpl::remove(key_file_data, from);
+  char tableFilePath[FN_REFLEN];
+  FileUtil::convertToTableFilePath(tableFilePath, from, ".json");
+  int err = TableFileImpl::remove(key_file_data, tableFilePath);
   if (err != 0) {
     return CANNOT_DELETE_TABLE_FILE;
   }
@@ -781,26 +783,19 @@ int ha_avid::create(const char *name, TABLE *, HA_CREATE_INFO *,
   DBUG_TRACE;
   THD *thd = this->ha_thd();
   char tableFilePath[FN_REFLEN];
+  FileUtil::convertToTableFilePath(tableFilePath, name, ".json");
 
   if (thd_sql_command(thd) == SQLCOM_TRUNCATE) {
     // TRUNCATE TABLE
-    strcpy(tableFilePath, get_share()->tableFilePath);
-    int err = TableFileImpl::truncate(
-        key_file_data, name, tableFilePath
-        );
+    int err = TableFileImpl::truncate(key_file_data, tableFilePath);
     if (err > 0) {
-      return err;
+      return -1;
     }
-    strcpy(get_share()->tableFilePath, tableFilePath);
-  }
-
-  int err = TableFileImpl::create(
-      key_file_data,
-      name,
-      tableFilePath
-      );
-  if (err > 0) {
-    return -1;
+  } else {
+    int err = TableFileImpl::create(key_file_data, tableFilePath);
+    if (err > 0) {
+      return -1;
+    }
   }
   strcpy(get_share()->tableFilePath, tableFilePath);
 

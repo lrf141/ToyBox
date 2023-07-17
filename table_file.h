@@ -5,10 +5,10 @@
 
 class TableFileImpl {
  public:
-   static int create(PSI_file_key key, const char *name, char *filePath);
-   static int truncate(PSI_file_key key, const char *name, char *filePath);
-   static File open(PSI_file_key key, const char *filePath);
-   static int remove(PSI_file_key key, const char *filePath);
+   static int create(PSI_file_key key, const char *tableFilePath);
+   static int truncate(PSI_file_key key, const char *tableFilePath);
+   static File open(PSI_file_key key, const char *tableFilePath);
+   static int remove(PSI_file_key key, const char *tableFilePath);
    static int close(File file);
 };
 
