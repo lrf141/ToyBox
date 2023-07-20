@@ -46,6 +46,8 @@
 #include "sql/handler.h" /* handler */
 #include "thr_lock.h"    /* THR_LOCK, THR_LOCK_DATA */
 
+#define PLUGIN_AUTHOR_ME "lrf141"
+
 /** @brief
   Avid_share is a class that will be shared among all open handlers.
   This avid implements the minimum of what you will probably need.

@@ -935,7 +935,7 @@ mysql_declare_plugin(avid){
     MYSQL_STORAGE_ENGINE_PLUGIN,
     &avid_storage_engine,
     "AVID",
-    PLUGIN_AUTHOR_ORACLE,
+    PLUGIN_AUTHOR_ME,
     "Avid storage engine",
     PLUGIN_LICENSE_GPL,
     avid_init_func, /* Plugin Init */
