@@ -5,10 +5,22 @@
 
 #include "page.h"
 
-typedef struct BufferPool BufferPool;
+typedef struct BufPool BufPool;
 
-struct BufferPool {
+struct BufPool {
   Page *pages;
+};
+
+class BufferPool {
+ private:
+  static BufPool *bufferPool;
+ public:
+  BufferPool() {}
+  ~BufferPool() {
+    free(bufferPool->pages);
+    free(bufferPool);
+  }
+  void init_buffer_pool(int bufPoolSize);
 };
 
 #endif  // MYSQL_BUFFER_H

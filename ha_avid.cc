@@ -122,6 +122,7 @@ static handler *avid_create_handler(handlerton *hton, TABLE_SHARE *table,
                                        bool partitioned, MEM_ROOT *mem_root);
 
 handlerton *avid_hton;
+BufferPool *bufferPool;
 
 /* Interface to mysqld, to check system tables supported by SE */
 static bool avid_is_supported_system_table(const char *db,
@@ -141,6 +142,15 @@ static int avid_init_func(void *p) {
   avid_hton->flags = HTON_CAN_RECREATE;
   avid_hton->is_supported_system_table = avid_is_supported_system_table;
 
+  BufferPool *bufPool = new BufferPool();
+  bufPool->init_buffer_pool(100);
+  bufferPool = bufPool;
+
+  return 0;
+}
+
+static int avid_deinit_func(void *) {
+  free(bufferPool);
   return 0;
 }
 
@@ -941,7 +951,7 @@ mysql_declare_plugin(avid){
     PLUGIN_LICENSE_GPL,
     avid_init_func, /* Plugin Init */
     nullptr,           /* Plugin check uninstall */
-    nullptr,           /* Plugin Deinit */
+    avid_deinit_func,           /* Plugin Deinit */
     0x0001 /* 0.1 */,
     func_status,              /* status variables */
     avid_system_variables, /* system variables */
