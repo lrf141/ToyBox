@@ -151,7 +151,6 @@ static int avid_init_func(void *p) {
   buf::BufPool *bp = new buf::BufPool();
   bp->init_buffer_pool(buffer_pool_key, 100);
   bufPool = bp;
-  //avid_hton->bufPool = bufPool;
 
   return 0;
 }
