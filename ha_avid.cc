@@ -128,7 +128,7 @@ static void init_avid_psi_keys() {
 static handler *avid_create_handler(handlerton *hton, TABLE_SHARE *table,
                                        bool partitioned, MEM_ROOT *mem_root);
 
-avid_handlerton *avid_hton;
+handlerton *avid_hton;
 static buf::BufPool *bufPool;
 
 /* Interface to mysqld, to check system tables supported by SE */
@@ -143,7 +143,7 @@ static int avid_init_func(void *p) {
 
   init_avid_psi_keys();
 
-  avid_hton = (avid_handlerton *)p;
+  avid_hton = (handlerton *)p;
   avid_hton->state = SHOW_OPTION_YES;
   avid_hton->create = avid_create_handler;
   avid_hton->flags = HTON_CAN_RECREATE;
