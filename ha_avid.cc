@@ -157,6 +157,7 @@ static int avid_init_func(void *p) {
 }
 
 static int avid_deinit_func(void *) {
+  bufPool->deinit_buffer_pool();
   free(bufPool);
   return 0;
 }
