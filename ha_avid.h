@@ -47,6 +47,7 @@
 #include "thr_lock.h"    /* THR_LOCK, THR_LOCK_DATA */
 
 #include "bufpool.h"
+#include "file.h"
 
 #define PLUGIN_AUTHOR_ME "lrf141"
 
@@ -58,14 +59,13 @@ class Avid_share : public Handler_share {
  public:
   THR_LOCK lock;
   File tableFile;
+  TableSpaceHeader tableSpaceHeader;
+  SystemPageHeader systemPageHeader;
+
   // example: [database name]/[table name].[ext]
   char tableFilePath[FN_REFLEN];
   Avid_share();
   ~Avid_share() override { thr_lock_delete(&lock); }
-};
-
-struct avid_handlerton : handlerton {
-  buf::BufPool *bufPool;
 };
 
 /** @brief

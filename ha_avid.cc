@@ -94,6 +94,7 @@
 #include <mysql/plugin.h>
 #include <mysql/psi/mysql_file.h>
 #include <algorithm>
+#include <iostream>
 
 #include "storage/avid/ha_avid.h"
 #include "avid_errorno.h"
@@ -101,6 +102,7 @@
 #include "file_util.h"
 #include "my_dbug.h"
 #include "mysql/psi/mysql_memory.h"
+#include "sql/field.h"
 #include "sql/sql_class.h"
 #include "sql/sql_plugin.h"
 #include "table_file.h"
@@ -269,6 +271,9 @@ int ha_avid::open(const char *name, int, uint, const dd::Table *) {
   }
   share->tableFile = tableFile;
   strcpy(share->tableFilePath, tableFilePath);
+
+  TableFileImpl::readTableSpaceHeader(tableFile);
+  TableFileImpl::readSystemPageHeader(tableFile);
 
   return 0;
 }
@@ -798,10 +803,11 @@ static MYSQL_THDVAR_UINT(create_count_thdvar, 0, nullptr, nullptr, nullptr, 0,
  * @param name ex) './[db name]/[tbl name]' without ext
  * @return
  */
-int ha_avid::create(const char *name, TABLE *, HA_CREATE_INFO *,
+int ha_avid::create(const char *name, TABLE *form, HA_CREATE_INFO *,
                        dd::Table *) {
   DBUG_TRACE;
   THD *thd = this->ha_thd();
+  // FN_REFLEN is max table path size
   char tableFilePath[FN_REFLEN];
   File newTableFile;
 
@@ -820,6 +826,34 @@ int ha_avid::create(const char *name, TABLE *, HA_CREATE_INFO *,
     }
   }
   strcpy(get_share()->tableFilePath, tableFilePath);
+
+  // create table space part
+  TableSpaceHeader tableSpaceHeader{};
+  tableSpaceHeader.tableSpaceId = 0;
+  tableSpaceHeader.pageCount = 0;
+  TableFileImpl::writeTableSpaceHeader(newTableFile, tableSpaceHeader);
+
+  // create system page header part
+  SystemPageHeader systemPageHeader{};
+  int columnCount = 0;
+  for (Field **field = form->s->field; *field; field++) {
+    columnCount++;
+  }
+  systemPageHeader.pageId = SYSTEM_PAGE_ID;
+  systemPageHeader.columnCount = columnCount;
+  TableFileImpl::writeSystemPageHeader(newTableFile, systemPageHeader);
+
+  /*
+  for (Field **field = form->s->field; *field; field++) {
+    std::cout << "===" << std::endl;
+    // column name
+    std::cout << (*field)->field_name << std::endl;
+    // real data size(byte). if this value is zero, the column has variable length
+    std::cout << (*field)->data_length() << std::endl;
+    // is_nullable(), true = 1, false = 0
+    std::cout << (*field)->is_nullable() << std::endl;
+    std::cout << "===" << std::endl;
+  }*/
 
   int err = TableFileImpl::close(newTableFile);
 

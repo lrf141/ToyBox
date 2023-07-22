@@ -21,3 +21,22 @@ int FileUtil::remove(PSI_file_key key, const char *tableFilePath, myf flags) {
 void FileUtil::convertToTableFilePath(char *tableFilePath, const char *name, const char *ext) {
   fn_format(tableFilePath, name, "", ext, MY_REPLACE_EXT | MY_UNPACK_FILENAME);
 }
+
+size_t FileUtil::read(File fd, uchar *buf, int readSize) {
+  return mysql_file_read(fd, buf, readSize, MYF(0));
+}
+
+size_t FileUtil::write(File fd, uchar *buf, int writeSize) {
+  return mysql_file_write(fd, buf, writeSize, MYF(0));
+}
+
+/**
+ *
+ * @param fd file descriptor
+ * @param position wanna set position (byte)
+ * @param whence SEEK_SET, SEEK_CUR, SEEK_END
+ * @param flags myf
+ */
+void FileUtil::seek(File fd, my_off_t position, int whence, myf flags) {
+  mysql_file_seek(fd, position, whence, flags);
+}

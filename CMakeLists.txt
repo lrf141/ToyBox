@@ -9,6 +9,7 @@ SET(AVID_SRC
         file_util.cc file_util.h
         bufpool.cc bufpool.h
         page.cc page.h
+        file.cc file.h
         )
 
 MYSQL_ADD_PLUGIN(avid ${AVID_SRC}
