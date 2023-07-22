@@ -98,9 +98,9 @@
 #include "storage/avid/ha_avid.h"
 #include "avid_errorno.h"
 
-#include "buffer.h"
 #include "file_util.h"
 #include "my_dbug.h"
+#include "mysql/psi/mysql_memory.h"
 #include "sql/sql_class.h"
 #include "sql/sql_plugin.h"
 #include "table_file.h"
@@ -110,19 +110,26 @@ static PSI_file_key key_file_data;
 static PSI_file_info all_avid_files[] = {
     {&key_file_data, "data", 0, 0, PSI_DOCUMENT_ME}
 };
+static PSI_memory_key buffer_pool_key;
+static PSI_memory_info all_avid_memory[] = {
+    {&buffer_pool_key, "bufpool", 0, 0, PSI_DOCUMENT_ME}
+};
 
 static void init_avid_psi_keys() {
-    const char *category = "json";
+    const char *category = "avid";
     int count = static_cast<int>(array_elements(all_avid_files));
     mysql_file_register(category, all_avid_files, count);
+
+    count = static_cast<int>(array_elements(all_avid_memory));
+    mysql_memory_register(category, all_avid_memory, count);
 }
 
 
 static handler *avid_create_handler(handlerton *hton, TABLE_SHARE *table,
                                        bool partitioned, MEM_ROOT *mem_root);
 
-handlerton *avid_hton;
-BufferPool *bufferPool;
+avid_handlerton *avid_hton;
+static buf::BufPool *bufPool;
 
 /* Interface to mysqld, to check system tables supported by SE */
 static bool avid_is_supported_system_table(const char *db,
@@ -136,21 +143,21 @@ static int avid_init_func(void *p) {
 
   init_avid_psi_keys();
 
-  avid_hton = (handlerton *)p;
+  avid_hton = (avid_handlerton *)p;
   avid_hton->state = SHOW_OPTION_YES;
   avid_hton->create = avid_create_handler;
   avid_hton->flags = HTON_CAN_RECREATE;
   avid_hton->is_supported_system_table = avid_is_supported_system_table;
-
-  BufferPool *bufPool = new BufferPool();
-  bufPool->init_buffer_pool(100);
-  bufferPool = bufPool;
+  buf::BufPool *bp = new buf::BufPool();
+  bp->init_buffer_pool(buffer_pool_key, 100);
+  bufPool = bp;
+  //avid_hton->bufPool = bufPool;
 
   return 0;
 }
 
 static int avid_deinit_func(void *) {
-  free(bufferPool);
+  free(bufPool);
   return 0;
 }
 

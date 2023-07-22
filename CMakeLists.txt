@@ -7,7 +7,7 @@ SET(AVID_SRC
         ha_avid.cc ha_avid.h
         table_file.cc table_file.h
         file_util.cc file_util.h
-        buffer.cc buffer.h
+        bufpool.cc bufpool.h
         page.cc page.h
         )
 
