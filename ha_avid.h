@@ -111,7 +111,8 @@ class ha_avid : public handler {
       an engine that can only handle statement-based logging. This is
       used in testing.
     */
-    return HA_BINLOG_STMT_CAPABLE;
+    //return HA_BINLOG_STMT_CAPABLE;
+    return 0;
   }
 
   /** @brief

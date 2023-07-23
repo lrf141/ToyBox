@@ -338,8 +338,9 @@ int ha_avid::close(void) {
   sql_insert.cc, sql_select.cc, sql_table.cc, sql_udf.cc and sql_update.cc
 */
 
-int ha_avid::write_row(uchar *) {
+int ha_avid::write_row(uchar *buf) {
   DBUG_TRACE;
+  std::cout << *buf << std::endl;
   /*
     Avid of a successful write_row. We don't store the data
     anywhere; they are thrown away. A real implementation will
