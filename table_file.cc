@@ -74,10 +74,11 @@ size_t TableFileImpl::writeSystemPageHeader(File fd, SystemPageHeader systemPage
   return wroteSize;
 }
 
-ColumnInfo *TableFileImpl::readSystemPageColumnInfo(File fd) {
+ColumnInfo *TableFileImpl::readSystemPageColumnInfo(File fd, int index) {
   uchar buf[COLUMN_INFO_SIZE];
+  int startPosition = TABLE_SPACE_START_POSITION + TABLE_SPACE_HEADER_SIZE + SYSTEM_PAGE_HEADER_SIZE;
   ColumnInfo *columnInfo = (ColumnInfo *)malloc(sizeof(ColumnInfo));
-  FileUtil::seek(fd, TABLE_SPACE_START_POSITION + TABLE_SPACE_HEADER_SIZE + SYSTEM_PAGE_HEADER_SIZE, MY_SEEK_SET, MYF(0));
+  FileUtil::seek(fd, startPosition + (COLUMN_INFO_SIZE * index), MY_SEEK_SET, MYF(0));
   read(fd, buf, COLUMN_INFO_SIZE);
   columnInfo = (ColumnInfo *)buf;
   return columnInfo;
@@ -87,10 +88,11 @@ size_t TableFileImpl::read(File fd, uchar *buf, int readSize) {
   return FileUtil::read(fd, buf, readSize);
 }
 
-size_t TableFileImpl::writeSystemPageColumnInfo(File fd, ColumnInfo columnInfo) {
+size_t TableFileImpl::writeSystemPageColumnInfo(File fd, ColumnInfo columnInfo, int index) {
+  int startPosition = TABLE_SPACE_START_POSITION + TABLE_SPACE_HEADER_SIZE + SYSTEM_PAGE_HEADER_SIZE;
   uchar *buf = (uchar *)malloc(sizeof(uchar) * COLUMN_INFO_SIZE);
   buf = reinterpret_cast<uchar *>(&columnInfo);
-  FileUtil::seek(fd, TABLE_SPACE_START_POSITION + TABLE_SPACE_HEADER_SIZE + SYSTEM_PAGE_HEADER_SIZE, MY_SEEK_SET, MYF(0));
+  FileUtil::seek(fd, startPosition + (COLUMN_INFO_SIZE * index), MY_SEEK_SET, MYF(0));
   size_t wroteSize = write(fd, buf, COLUMN_INFO_SIZE);
   return wroteSize;
 }

@@ -10,6 +10,8 @@
 #define COLUMN_INFO_SIZE 72
 // TODO: replace to MySQL Column Max Size
 #define COLUMN_NAME_MAX_SIZE 64
+#define FIX_SIZE_COLUMN 0
+#define VARIABLE_SIZE_COLUMN 1
 
 #define SYSTEM_PAGE_ID 0
 
@@ -31,12 +33,7 @@ struct ColumnInfo {
   uint8_t type;
   uint8_t isNull;
   uint32_t dataSize;
-  uchar name[COLUMN_NAME_MAX_SIZE];
-};
-
-enum {
-  FIX_SIZE_COLUMN = 0,
-  VARIABLE_SIZE_COLUMN = 1
+  char name[COLUMN_NAME_MAX_SIZE];
 };
 
 typedef struct ColumnInfo ColumnInfo;

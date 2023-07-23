@@ -272,8 +272,18 @@ int ha_avid::open(const char *name, int, uint, const dd::Table *) {
   share->tableFile = tableFile;
   strcpy(share->tableFilePath, tableFilePath);
 
-  TableFileImpl::readTableSpaceHeader(tableFile);
-  TableFileImpl::readSystemPageHeader(tableFile);
+  TableSpaceHeader *tableSpaceHeader = TableFileImpl::readTableSpaceHeader(tableFile);
+  share->tableSpaceHeader = tableSpaceHeader;
+
+  SystemPageHeader *systemPageHeader = TableFileImpl::readSystemPageHeader(tableFile);
+  share->systemPageHeader = systemPageHeader;
+
+  int columnSize = static_cast<int>(systemPageHeader->columnCount);
+  for (int index = 0; index < columnSize; index++) {
+    ColumnInfo *columnInfo = (ColumnInfo *)malloc(sizeof(ColumnInfo));
+    columnInfo = TableFileImpl::readSystemPageColumnInfo(tableFile, index);
+    share->columnInfos.push_back(columnInfo);
+  }
 
   return 0;
 }
@@ -843,17 +853,17 @@ int ha_avid::create(const char *name, TABLE *form, HA_CREATE_INFO *,
   systemPageHeader.columnCount = columnCount;
   TableFileImpl::writeSystemPageHeader(newTableFile, systemPageHeader);
 
-  /*
+
+  int index = 0;
   for (Field **field = form->s->field; *field; field++) {
-    std::cout << "===" << std::endl;
-    // column name
-    std::cout << (*field)->field_name << std::endl;
-    // real data size(byte). if this value is zero, the column has variable length
-    std::cout << (*field)->data_length() << std::endl;
-    // is_nullable(), true = 1, false = 0
-    std::cout << (*field)->is_nullable() << std::endl;
-    std::cout << "===" << std::endl;
-  }*/
+    ColumnInfo columnInfo{};
+    columnInfo.type = (*field)->data_length() == 0 ? VARIABLE_SIZE_COLUMN : FIX_SIZE_COLUMN;
+    columnInfo.isNull = (*field)->is_nullable();
+    columnInfo.dataSize = (*field)->data_length();
+    strcpy(columnInfo.name, (*field)->field_name);
+    TableFileImpl::writeSystemPageColumnInfo(newTableFile, columnInfo, index);
+    index++;
+  }
 
   int err = TableFileImpl::close(newTableFile);
 

@@ -59,13 +59,16 @@ class Avid_share : public Handler_share {
  public:
   THR_LOCK lock;
   File tableFile;
-  TableSpaceHeader tableSpaceHeader;
-  SystemPageHeader systemPageHeader;
+  TableSpaceHeader *tableSpaceHeader;
+  SystemPageHeader *systemPageHeader;
+  std::vector<ColumnInfo *> columnInfos;
 
   // example: [database name]/[table name].[ext]
   char tableFilePath[FN_REFLEN];
   Avid_share();
-  ~Avid_share() override { thr_lock_delete(&lock); }
+  ~Avid_share() override {
+    thr_lock_delete(&lock);
+  }
 };
 
 /** @brief

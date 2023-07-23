@@ -18,8 +18,8 @@ class TableFileImpl {
    static size_t writeTableSpaceHeader(File fd, TableSpaceHeader tableSpaceHeader);
    static SystemPageHeader *readSystemPageHeader(File fd);
    static size_t writeSystemPageHeader(File fd, SystemPageHeader systemPageHeader);
-   static ColumnInfo *readSystemPageColumnInfo(File fd);
-   static size_t writeSystemPageColumnInfo(File fd, ColumnInfo columnInfo);
+   static ColumnInfo *readSystemPageColumnInfo(File fd, int index);
+   static size_t writeSystemPageColumnInfo(File fd, ColumnInfo columnInfo, int index);
 };
 
 #endif  // MYSQL_TABLE_FILE_H
