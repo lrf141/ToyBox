@@ -1,6 +1,7 @@
 #include "table_file.h"
 #include "avid_errorno.h"
 #include "file_util.h"
+#include "page.h"
 
 File TableFileImpl::create(PSI_file_key key, const char *tableFilePath) {
   File newTableFile;
@@ -103,10 +104,20 @@ size_t TableFileImpl::writeSystemPageColumnInfo(File fd, ColumnInfo columnInfo, 
 size_t TableFileImpl::write(File fd, uchar *buf, int writeSize) {
   return FileUtil::write(fd, buf, writeSize);
 }
+
 size_t TableFileImpl::reserveSystemPage(File fd) {
   uchar *buf = (uchar *)calloc(SYSTEM_PAGE_SIZE, sizeof(uchar));
   FileUtil::seek(fd, TABLE_SPACE_START_POSITION + TABLE_SPACE_HEADER_SIZE, MY_SEEK_SET, MYF(0));
   size_t writeSize = write(fd, buf, SYSTEM_PAGE_SIZE);
+  free(buf);
+  return writeSize;
+}
+
+size_t TableFileImpl::reservePage(File fd, int pageId) {
+  uchar *buf = (uchar *)calloc(PAGE_SIZE, sizeof(uchar));
+  my_off_t offset = TABLE_SPACE_START_POSITION + TABLE_SPACE_HEADER_SIZE + SYSTEM_PAGE_SIZE + (PAGE_SIZE * pageId);
+  FileUtil::seek(fd, offset, MY_SEEK_SET, MYF(0));
+  size_t writeSize = write(fd, buf, PAGE_SIZE);
   free(buf);
   return writeSize;
 }

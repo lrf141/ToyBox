@@ -21,6 +21,7 @@ class TableFileImpl {
    static size_t writeSystemPageHeader(File fd, SystemPageHeader systemPageHeader);
    static ColumnInfo *readSystemPageColumnInfo(File fd, int index);
    static size_t writeSystemPageColumnInfo(File fd, ColumnInfo columnInfo, int index);
+   static size_t reservePage(File fd, int pageId);
 };
 
 #endif  // MYSQL_TABLE_FILE_H

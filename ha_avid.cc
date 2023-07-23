@@ -872,6 +872,9 @@ int ha_avid::create(const char *name, TABLE *form, HA_CREATE_INFO *,
     index++;
   }
 
+  size_t pageSize = TableFileImpl::reservePage(newTableFile, 0);
+  assert(pageSize == PAGE_SIZE);
+
   int err = TableFileImpl::close(newTableFile);
 
   return err;
