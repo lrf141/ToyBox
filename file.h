@@ -12,6 +12,7 @@
  * type: 1byte
  * isNull: 1byte
  * padding: 2byte
+ * dataSize: 4byte
  * name: 64byte
  */
 #define COLUMN_INFO_SIZE 72
