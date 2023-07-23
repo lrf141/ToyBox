@@ -844,6 +844,10 @@ int ha_avid::create(const char *name, TABLE *form, HA_CREATE_INFO *,
   size_t tableSpaceHeaderSize = TableFileImpl::writeTableSpaceHeader(newTableFile, tableSpaceHeader);
   assert(tableSpaceHeaderSize == TABLE_SPACE_HEADER_SIZE);
 
+  // reserve SystemPage Area
+  size_t systemPageSize = TableFileImpl::reserveSystemPage(newTableFile);
+  assert(systemPageSize == SYSTEM_PAGE_SIZE);
+
   // create system page header part
   SystemPageHeader systemPageHeader{};
   int columnCount = 0;

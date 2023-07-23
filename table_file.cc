@@ -103,3 +103,10 @@ size_t TableFileImpl::writeSystemPageColumnInfo(File fd, ColumnInfo columnInfo, 
 size_t TableFileImpl::write(File fd, uchar *buf, int writeSize) {
   return FileUtil::write(fd, buf, writeSize);
 }
+size_t TableFileImpl::reserveSystemPage(File fd) {
+  uchar *buf = (uchar *)calloc(SYSTEM_PAGE_SIZE, sizeof(uchar));
+  FileUtil::seek(fd, TABLE_SPACE_START_POSITION + TABLE_SPACE_HEADER_SIZE, MY_SEEK_SET, MYF(0));
+  size_t writeSize = write(fd, buf, SYSTEM_PAGE_SIZE);
+  free(buf);
+  return writeSize;
+}

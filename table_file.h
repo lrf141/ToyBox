@@ -15,6 +15,7 @@ class TableFileImpl {
    static size_t write(File fd, uchar *buf, int writeSize);
    static int close(File file);
    static TableSpaceHeader *readTableSpaceHeader(File fd);
+   static size_t reserveSystemPage(File fd);
    static size_t writeTableSpaceHeader(File fd, TableSpaceHeader tableSpaceHeader);
    static SystemPageHeader *readSystemPageHeader(File fd);
    static size_t writeSystemPageHeader(File fd, SystemPageHeader systemPageHeader);
