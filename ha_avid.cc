@@ -841,7 +841,8 @@ int ha_avid::create(const char *name, TABLE *form, HA_CREATE_INFO *,
   TableSpaceHeader tableSpaceHeader{};
   tableSpaceHeader.tableSpaceId = 0;
   tableSpaceHeader.pageCount = 0;
-  TableFileImpl::writeTableSpaceHeader(newTableFile, tableSpaceHeader);
+  size_t tableSpaceHeaderSize = TableFileImpl::writeTableSpaceHeader(newTableFile, tableSpaceHeader);
+  assert(tableSpaceHeaderSize == TABLE_SPACE_HEADER_SIZE);
 
   // create system page header part
   SystemPageHeader systemPageHeader{};
@@ -851,7 +852,8 @@ int ha_avid::create(const char *name, TABLE *form, HA_CREATE_INFO *,
   }
   systemPageHeader.pageId = SYSTEM_PAGE_ID;
   systemPageHeader.columnCount = columnCount;
-  TableFileImpl::writeSystemPageHeader(newTableFile, systemPageHeader);
+  size_t systemPageHeaderSize = TableFileImpl::writeSystemPageHeader(newTableFile, systemPageHeader);
+  assert(systemPageHeaderSize == SYSTEM_PAGE_HEADER_SIZE);
 
 
   int index = 0;
@@ -861,7 +863,8 @@ int ha_avid::create(const char *name, TABLE *form, HA_CREATE_INFO *,
     columnInfo.isNull = (*field)->is_nullable();
     columnInfo.dataSize = (*field)->data_length();
     strcpy(columnInfo.name, (*field)->field_name);
-    TableFileImpl::writeSystemPageColumnInfo(newTableFile, columnInfo, index);
+    size_t columnInfoSize = TableFileImpl::writeSystemPageColumnInfo(newTableFile, columnInfo, index);
+    assert(columnInfoSize == COLUMN_INFO_SIZE);
     index++;
   }
 

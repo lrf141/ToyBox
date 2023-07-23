@@ -44,7 +44,8 @@ TableSpaceHeader *TableFileImpl::readTableSpaceHeader(File fd) {
   uchar buf[TABLE_SPACE_HEADER_SIZE];
   TableSpaceHeader *tableSpaceHeader = (TableSpaceHeader *)malloc(sizeof(TableSpaceHeader));
   FileUtil::seek(fd, TABLE_SPACE_START_POSITION, MY_SEEK_SET, MYF(0));
-  read(fd, buf, TABLE_SPACE_HEADER_SIZE);
+  size_t readSize = read(fd, buf, TABLE_SPACE_HEADER_SIZE);
+  assert(readSize == TABLE_SPACE_HEADER_SIZE);
   tableSpaceHeader = (TableSpaceHeader *)buf;
   return tableSpaceHeader;
 }
@@ -61,7 +62,8 @@ SystemPageHeader *TableFileImpl::readSystemPageHeader(File fd) {
   uchar buf[TABLE_SPACE_HEADER_SIZE];
   SystemPageHeader *systemPageHeader = (SystemPageHeader *)malloc(sizeof(SystemPageHeader));
   FileUtil::seek(fd, TABLE_SPACE_START_POSITION + TABLE_SPACE_HEADER_SIZE, MY_SEEK_SET, MYF(0));
-  read(fd, buf, SYSTEM_PAGE_HEADER_SIZE);
+  size_t readSize = read(fd, buf, SYSTEM_PAGE_HEADER_SIZE);
+  assert(readSize == SYSTEM_PAGE_HEADER_SIZE);
   systemPageHeader = (SystemPageHeader *)buf;
   return systemPageHeader;
 }
@@ -79,7 +81,8 @@ ColumnInfo *TableFileImpl::readSystemPageColumnInfo(File fd, int index) {
   int startPosition = TABLE_SPACE_START_POSITION + TABLE_SPACE_HEADER_SIZE + SYSTEM_PAGE_HEADER_SIZE;
   ColumnInfo *columnInfo = (ColumnInfo *)malloc(sizeof(ColumnInfo));
   FileUtil::seek(fd, startPosition + (COLUMN_INFO_SIZE * index), MY_SEEK_SET, MYF(0));
-  read(fd, buf, COLUMN_INFO_SIZE);
+  size_t readSize = read(fd, buf, COLUMN_INFO_SIZE);
+  assert(readSize == COLUMN_INFO_SIZE);
   columnInfo = (ColumnInfo *)buf;
   return columnInfo;
 }
