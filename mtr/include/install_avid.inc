@@ -1,0 +1,1 @@
+INSTALL PLUGIN avid SONAME 'ha_avid.so';
