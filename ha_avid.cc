@@ -344,14 +344,42 @@ int ha_avid::close(void) {
 
 int ha_avid::write_row(uchar *buf) {
   DBUG_TRACE;
-  std::cout << *buf << std::endl;
+  insert_to_page(buf);
+  b = (uchar *)calloc(sizeof(uchar), 1024);
+  memcpy(b, buf, 6);
   /*
-    Avid of a successful write_row. We don't store the data
+    Example of a successful write_row. We don't store the data
     anywhere; they are thrown away. A real implementation will
     probably need to do something with 'buf'. We report a success
     here, to pretend that the insert was successful.
   */
   return 0;
+}
+
+void ha_avid::insert_to_page(uchar *record) {
+  // skip null bitmap (first 1 byte)
+  record = (record + 1);
+  uint32 fixedSizeColumnTotalSize = 0;
+  uint32_t columnSize = 0;
+  for (Field **field = table->field; *field; field++) {
+    columnSize += (*field)->data_length();
+  }
+
+  uchar *bufFixedLength = (uchar *)calloc(sizeof(uchar), columnSize);
+
+  for (Field **field = table->field; *field; field++) {
+    uint32 dataLength = (*field)->data_length();
+    if (dataLength != 0) {
+      // Fixed Size Column
+      memcpy(bufFixedLength, record, dataLength);
+      // skip read binary position
+      record = (record + dataLength);
+      fixedSizeColumnTotalSize += dataLength;
+    }
+  }
+  bufPool->write(bufFixedLength, columnSize, 0, 0);
+  bufPool->flush(share->tableFile);
+  free(bufFixedLength);
 }
 
 /**
@@ -496,6 +524,7 @@ int ha_avid::index_last(uchar *) {
 */
 int ha_avid::rnd_init(bool) {
   DBUG_TRACE;
+  stats.records = 0;
   return 0;
 }
 
@@ -519,11 +548,41 @@ int ha_avid::rnd_end() {
   filesort.cc, records.cc, sql_handler.cc, sql_select.cc, sql_table.cc and
   sql_update.cc
 */
-int ha_avid::rnd_next(uchar *) {
-  int rc;
+int ha_avid::rnd_next(uchar *buf) {
   DBUG_TRACE;
-  rc = HA_ERR_END_OF_FILE;
-  return rc;
+  my_bitmap_map *org_bitmap;
+
+  memset(buf, 0, table->s->null_bytes);
+  org_bitmap = tmp_use_all_columns(table, table->write_set);
+
+  int fixedSize = 0;
+  for (Field **field = table->field; *field; field++) {
+    fixedSize += (*field)->data_length();
+  }
+
+  uchar *readBuf = (uchar *)calloc(sizeof(uchar), fixedSize);
+  // read fix size columns
+  bufPool->read(readBuf, fixedSize, 1, 0);
+  buffer.length(0);
+
+//  for (Field **field = table->field; *field; field++) {
+    /*
+    uint32 dataLength = (*field)->data_length();
+    char *columnBuf = (char *)calloc(sizeof(uchar), dataLength);
+    memcpy(columnBuf, readBuf, dataLength);
+    free(columnBuf);*/
+  /*  buffer.append('1');
+    (*field)->store(buffer.ptr(), buffer.length(), buffer.charset());
+    std::cout << "insert" << std::endl;
+  }*/
+  memcpy(buf, b, 6);
+  tmp_restore_column_map(table->write_set, org_bitmap);
+  free(readBuf);
+  if (cur > 0) {
+    return HA_ERR_END_OF_FILE;
+  }
+  cur++;
+  return 0;
 }
 
 /**

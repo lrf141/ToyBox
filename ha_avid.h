@@ -48,6 +48,7 @@
 
 #include "bufpool.h"
 #include "file.h"
+#include "sql_string.h"
 
 #define PLUGIN_AUTHOR_ME "lrf141"
 
@@ -78,6 +79,9 @@ class ha_avid : public handler {
   THR_LOCK_DATA lock;          ///< MySQL lock
   Avid_share *share;        ///< Shared lock info
   Avid_share *get_share();  ///< Get the share
+  String buffer;
+  uchar *b;
+  int cur = 0;
 
  public:
   ha_avid(handlerton *hton, TABLE_SHARE *table_arg);
@@ -283,4 +287,6 @@ class ha_avid : public handler {
   THR_LOCK_DATA **store_lock(
       THD *thd, THR_LOCK_DATA **to,
       enum thr_lock_type lock_type) override;  ///< required
+
+  void insert_to_page(uchar *record);
 };
