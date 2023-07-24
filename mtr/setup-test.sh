@@ -7,6 +7,6 @@ patch ${MYSQL_PROJECT}/mysql-test/mysql-test-run.pl ${AVID_PROJECT}/mtr/mysql-te
 mkdir ${MYSQL_PROJECT}/mysql-test/suite/avid
 mkdir ${MYSQL_PROJECT}/mysql-test/suite/avid/include
 mkdir ${MYSQL_PROJECT}/mysql-test/suite/avid/t ${MYSQL_PROJECT}/mysql-test/suite/avid/r
-cp -r ${AVID_PROJECT}/mtr/include/ ${MYSQL_PROJECT}/mysql-test/suite/avid/include/
-cp -r ${AVID_PROJECT}/mtr/t/ ${MYSQL_PROJECT}/mysql-test/suite/avid/t/
-cp -r ${AVID_PROJECT}/mtr/r/ ${MYSQL_PROJECT}/mysql-test/suite/avid/r/
+cp -r ${AVID_PROJECT}/mtr/include ${MYSQL_PROJECT}/mysql-test/suite/avid/
+cp -r ${AVID_PROJECT}/mtr/t/ ${MYSQL_PROJECT}/mysql-test/suite/avid/
+cp -r ${AVID_PROJECT}/mtr/r/ ${MYSQL_PROJECT}/mysql-test/suite/avid/
