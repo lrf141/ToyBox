@@ -336,6 +336,10 @@ int ha_avid::close(void) {
   @see
   item_sum.cc, item_sum.cc, sql_acl.cc, sql_insert.cc,
   sql_insert.cc, sql_select.cc, sql_table.cc, sql_udf.cc and sql_update.cc
+
+  @see
+  write_row binary format
+  https://dev.mysql.com/doc/dev/mysql-server/latest/PAGE_TEMPTABLE_ROW_FORMAT.html
 */
 
 int ha_avid::write_row(uchar *buf) {
