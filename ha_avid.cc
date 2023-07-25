@@ -94,12 +94,15 @@
 #include <mysql/plugin.h>
 #include <mysql/psi/mysql_file.h>
 #include <algorithm>
+#include <iostream>
 
 #include "storage/avid/ha_avid.h"
 #include "avid_errorno.h"
 
 #include "file_util.h"
 #include "my_dbug.h"
+#include "mysql/psi/mysql_memory.h"
+#include "sql/field.h"
 #include "sql/sql_class.h"
 #include "sql/sql_plugin.h"
 #include "table_file.h"
@@ -109,11 +112,18 @@ static PSI_file_key key_file_data;
 static PSI_file_info all_avid_files[] = {
     {&key_file_data, "data", 0, 0, PSI_DOCUMENT_ME}
 };
+static PSI_memory_key buffer_pool_key;
+static PSI_memory_info all_avid_memory[] = {
+    {&buffer_pool_key, "bufpool", 0, 0, PSI_DOCUMENT_ME}
+};
 
 static void init_avid_psi_keys() {
-    const char *category = "json";
+    const char *category = "avid";
     int count = static_cast<int>(array_elements(all_avid_files));
     mysql_file_register(category, all_avid_files, count);
+
+    count = static_cast<int>(array_elements(all_avid_memory));
+    mysql_memory_register(category, all_avid_memory, count);
 }
 
 
@@ -121,6 +131,7 @@ static handler *avid_create_handler(handlerton *hton, TABLE_SHARE *table,
                                        bool partitioned, MEM_ROOT *mem_root);
 
 handlerton *avid_hton;
+static buf::BufPool *bufPool;
 
 /* Interface to mysqld, to check system tables supported by SE */
 static bool avid_is_supported_system_table(const char *db,
@@ -139,7 +150,16 @@ static int avid_init_func(void *p) {
   avid_hton->create = avid_create_handler;
   avid_hton->flags = HTON_CAN_RECREATE;
   avid_hton->is_supported_system_table = avid_is_supported_system_table;
+  buf::BufPool *bp = new buf::BufPool();
+  bp->init_buffer_pool(buffer_pool_key, 100);
+  bufPool = bp;
 
+  return 0;
+}
+
+static int avid_deinit_func(void *) {
+  bufPool->deinit_buffer_pool();
+  free(bufPool);
   return 0;
 }
 
@@ -252,6 +272,19 @@ int ha_avid::open(const char *name, int, uint, const dd::Table *) {
   share->tableFile = tableFile;
   strcpy(share->tableFilePath, tableFilePath);
 
+  TableSpaceHeader *tableSpaceHeader = TableFileImpl::readTableSpaceHeader(tableFile);
+  share->tableSpaceHeader = tableSpaceHeader;
+
+  SystemPageHeader *systemPageHeader = TableFileImpl::readSystemPageHeader(tableFile);
+  share->systemPageHeader = systemPageHeader;
+
+  int columnSize = static_cast<int>(systemPageHeader->columnCount);
+  for (int index = 0; index < columnSize; index++) {
+    ColumnInfo *columnInfo = (ColumnInfo *)malloc(sizeof(ColumnInfo));
+    columnInfo = TableFileImpl::readSystemPageColumnInfo(tableFile, index);
+    share->columnInfos.push_back(columnInfo);
+  }
+
   return 0;
 }
 
@@ -303,17 +336,50 @@ int ha_avid::close(void) {
   @see
   item_sum.cc, item_sum.cc, sql_acl.cc, sql_insert.cc,
   sql_insert.cc, sql_select.cc, sql_table.cc, sql_udf.cc and sql_update.cc
+
+  @see
+  write_row binary format
+  https://dev.mysql.com/doc/dev/mysql-server/latest/PAGE_TEMPTABLE_ROW_FORMAT.html
 */
 
-int ha_avid::write_row(uchar *) {
+int ha_avid::write_row(uchar *buf) {
   DBUG_TRACE;
+  insert_to_page(buf);
   /*
-    Avid of a successful write_row. We don't store the data
+    Example of a successful write_row. We don't store the data
     anywhere; they are thrown away. A real implementation will
     probably need to do something with 'buf'. We report a success
     here, to pretend that the insert was successful.
   */
   return 0;
+}
+
+void ha_avid::insert_to_page(uchar *record) {
+  // skip null bitmap (first 1 byte)
+  record = (record + 1);
+  uint32 fixedSizeColumnTotalSize = 0;
+  uint32_t columnSize = 0;
+  for (Field **field = table->field; *field; field++) {
+    columnSize += (*field)->data_length();
+  }
+
+  uchar *fixedLengthBuf = (uchar *)calloc(sizeof(uchar), columnSize);
+
+  int insertPos = 0;
+  for (Field **field = table->field; *field; field++) {
+    uint32 dataLength = (*field)->data_length();
+    if (dataLength != 0) {
+      // Fixed Size Column
+      memcpy(fixedLengthBuf + insertPos, record, dataLength);
+      // skip read binary position
+      record = (record + dataLength);
+      insertPos += dataLength;
+      fixedSizeColumnTotalSize += dataLength;
+    }
+  }
+  bufPool->write(fixedLengthBuf, columnSize, 0, 0);
+  bufPool->flush(share->tableFile);
+  free(fixedLengthBuf);
 }
 
 /**
@@ -458,6 +524,7 @@ int ha_avid::index_last(uchar *) {
 */
 int ha_avid::rnd_init(bool) {
   DBUG_TRACE;
+  table_scan_now_cur = 0;
   return 0;
 }
 
@@ -481,11 +548,39 @@ int ha_avid::rnd_end() {
   filesort.cc, records.cc, sql_handler.cc, sql_select.cc, sql_table.cc and
   sql_update.cc
 */
-int ha_avid::rnd_next(uchar *) {
-  int rc;
+int ha_avid::rnd_next(uchar *buf) {
   DBUG_TRACE;
-  rc = HA_ERR_END_OF_FILE;
-  return rc;
+
+  if (table_scan_now_cur == bufPool->pages->pageHeader.tupleCount) {
+    return HA_ERR_END_OF_FILE;
+  }
+
+  my_bitmap_map *org_bitmap;
+  memset(buf, 0, table->s->null_bytes);
+  org_bitmap = tmp_use_all_columns(table, table->write_set);
+
+  int fixedSize = 0;
+  for (Field **field = table->field; *field; field++) {
+    fixedSize += (*field)->data_length();
+  }
+
+  uchar *tupleBuf = (uchar *)calloc(sizeof(uchar), fixedSize);
+  // read fix size columns
+  bufPool->read(tupleBuf, fixedSize, table_scan_now_cur + 1, 0);
+
+  int fieldCount = 0;
+  for (Field **field = table->field; *field; field++) {
+    uint32 dataLength = (*field)->data_length();
+    uchar *columnBuf = (uchar *)calloc(sizeof(uchar), dataLength);
+    memcpy(columnBuf, (tupleBuf + (dataLength * fieldCount)), dataLength);
+    memcpy((buf + 1 + (dataLength * fieldCount)), columnBuf, dataLength);
+    free(columnBuf);
+    fieldCount++;
+  }
+  tmp_restore_column_map(table->write_set, org_bitmap);
+  free(tupleBuf);
+  table_scan_now_cur++;
+  return 0;
 }
 
 /**
@@ -780,10 +875,11 @@ static MYSQL_THDVAR_UINT(create_count_thdvar, 0, nullptr, nullptr, nullptr, 0,
  * @param name ex) './[db name]/[tbl name]' without ext
  * @return
  */
-int ha_avid::create(const char *name, TABLE *, HA_CREATE_INFO *,
+int ha_avid::create(const char *name, TABLE *form, HA_CREATE_INFO *,
                        dd::Table *) {
   DBUG_TRACE;
   THD *thd = this->ha_thd();
+  // FN_REFLEN is max table path size
   char tableFilePath[FN_REFLEN];
   File newTableFile;
 
@@ -802,6 +898,44 @@ int ha_avid::create(const char *name, TABLE *, HA_CREATE_INFO *,
     }
   }
   strcpy(get_share()->tableFilePath, tableFilePath);
+
+  // create table space part
+  TableSpaceHeader tableSpaceHeader{};
+  tableSpaceHeader.tableSpaceId = 0;
+  tableSpaceHeader.pageCount = 0;
+  size_t tableSpaceHeaderSize = TableFileImpl::writeTableSpaceHeader(newTableFile, tableSpaceHeader);
+  assert(tableSpaceHeaderSize == TABLE_SPACE_HEADER_SIZE);
+
+  // reserve SystemPage Area
+  size_t systemPageSize = TableFileImpl::reserveSystemPage(newTableFile);
+  assert(systemPageSize == SYSTEM_PAGE_SIZE);
+
+  // create system page header part
+  SystemPageHeader systemPageHeader{};
+  int columnCount = 0;
+  for (Field **field = form->s->field; *field; field++) {
+    columnCount++;
+  }
+  systemPageHeader.pageId = SYSTEM_PAGE_ID;
+  systemPageHeader.columnCount = columnCount;
+  size_t systemPageHeaderSize = TableFileImpl::writeSystemPageHeader(newTableFile, systemPageHeader);
+  assert(systemPageHeaderSize == SYSTEM_PAGE_HEADER_SIZE);
+
+
+  int index = 0;
+  for (Field **field = form->s->field; *field; field++) {
+    ColumnInfo columnInfo{};
+    columnInfo.type = (*field)->data_length() == 0 ? VARIABLE_SIZE_COLUMN : FIX_SIZE_COLUMN;
+    columnInfo.isNull = (*field)->is_nullable();
+    columnInfo.dataSize = (*field)->data_length();
+    strcpy(columnInfo.name, (*field)->field_name);
+    size_t columnInfoSize = TableFileImpl::writeSystemPageColumnInfo(newTableFile, columnInfo, index);
+    assert(columnInfoSize == COLUMN_INFO_SIZE);
+    index++;
+  }
+
+  size_t pageSize = TableFileImpl::reservePage(newTableFile, 0);
+  assert(pageSize == PAGE_SIZE);
 
   int err = TableFileImpl::close(newTableFile);
 
@@ -940,7 +1074,7 @@ mysql_declare_plugin(avid){
     PLUGIN_LICENSE_GPL,
     avid_init_func, /* Plugin Init */
     nullptr,           /* Plugin check uninstall */
-    nullptr,           /* Plugin Deinit */
+    avid_deinit_func,           /* Plugin Deinit */
     0x0001 /* 0.1 */,
     func_status,              /* status variables */
     avid_system_variables, /* system variables */

@@ -46,6 +46,10 @@
 #include "sql/handler.h" /* handler */
 #include "thr_lock.h"    /* THR_LOCK, THR_LOCK_DATA */
 
+#include "bufpool.h"
+#include "file.h"
+#include "sql_string.h"
+
 #define PLUGIN_AUTHOR_ME "lrf141"
 
 /** @brief
@@ -56,10 +60,16 @@ class Avid_share : public Handler_share {
  public:
   THR_LOCK lock;
   File tableFile;
+  TableSpaceHeader *tableSpaceHeader;
+  SystemPageHeader *systemPageHeader;
+  std::vector<ColumnInfo *> columnInfos;
+
   // example: [database name]/[table name].[ext]
   char tableFilePath[FN_REFLEN];
   Avid_share();
-  ~Avid_share() override { thr_lock_delete(&lock); }
+  ~Avid_share() override {
+    thr_lock_delete(&lock);
+  }
 };
 
 /** @brief
@@ -69,6 +79,9 @@ class ha_avid : public handler {
   THR_LOCK_DATA lock;          ///< MySQL lock
   Avid_share *share;        ///< Shared lock info
   Avid_share *get_share();  ///< Get the share
+  String buffer;
+  uchar *b;
+  uint32_t table_scan_now_cur = 0;
 
  public:
   ha_avid(handlerton *hton, TABLE_SHARE *table_arg);
@@ -102,7 +115,8 @@ class ha_avid : public handler {
       an engine that can only handle statement-based logging. This is
       used in testing.
     */
-    return HA_BINLOG_STMT_CAPABLE;
+    //return HA_BINLOG_STMT_CAPABLE;
+    return 0;
   }
 
   /** @brief
@@ -273,4 +287,6 @@ class ha_avid : public handler {
   THR_LOCK_DATA **store_lock(
       THD *thd, THR_LOCK_DATA **to,
       enum thr_lock_type lock_type) override;  ///< required
+
+  void insert_to_page(uchar *record);
 };
