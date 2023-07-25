@@ -1,5 +1,6 @@
 --source ../include/install_avid.inc
 CREATE TABLE t1(id INT)Engine=Avid;
 INSERT INTO t1(id) VALUES(1);
+SELECT * FROM t1;
 DROP TABLE t1;
 --source ../include/uninstall_avid.inc

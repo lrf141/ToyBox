@@ -81,7 +81,7 @@ class ha_avid : public handler {
   Avid_share *get_share();  ///< Get the share
   String buffer;
   uchar *b;
-  int cur = 0;
+  uint32_t table_scan_now_cur = 0;
 
  public:
   ha_avid(handlerton *hton, TABLE_SHARE *table_arg);

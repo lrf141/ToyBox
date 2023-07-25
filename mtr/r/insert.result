@@ -1,5 +1,8 @@
 INSTALL PLUGIN avid SONAME 'ha_avid.so';
 CREATE TABLE t1(id INT)Engine=Avid;
 INSERT INTO t1(id) VALUES(1);
+SELECT * FROM t1;
+id
+1
 DROP TABLE t1;
 UNINSTALL PLUGIN avid;

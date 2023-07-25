@@ -345,8 +345,6 @@ int ha_avid::close(void) {
 int ha_avid::write_row(uchar *buf) {
   DBUG_TRACE;
   insert_to_page(buf);
-  b = (uchar *)calloc(sizeof(uchar), 1024);
-  memcpy(b, buf, 6);
   /*
     Example of a successful write_row. We don't store the data
     anywhere; they are thrown away. A real implementation will
@@ -365,21 +363,23 @@ void ha_avid::insert_to_page(uchar *record) {
     columnSize += (*field)->data_length();
   }
 
-  uchar *bufFixedLength = (uchar *)calloc(sizeof(uchar), columnSize);
+  uchar *fixedLengthBuf = (uchar *)calloc(sizeof(uchar), columnSize);
 
+  int insertPos = 0;
   for (Field **field = table->field; *field; field++) {
     uint32 dataLength = (*field)->data_length();
     if (dataLength != 0) {
       // Fixed Size Column
-      memcpy(bufFixedLength, record, dataLength);
+      memcpy(fixedLengthBuf + insertPos, record, dataLength);
       // skip read binary position
       record = (record + dataLength);
+      insertPos += dataLength;
       fixedSizeColumnTotalSize += dataLength;
     }
   }
-  bufPool->write(bufFixedLength, columnSize, 0, 0);
+  bufPool->write(fixedLengthBuf, columnSize, 0, 0);
   bufPool->flush(share->tableFile);
-  free(bufFixedLength);
+  free(fixedLengthBuf);
 }
 
 /**
@@ -524,7 +524,7 @@ int ha_avid::index_last(uchar *) {
 */
 int ha_avid::rnd_init(bool) {
   DBUG_TRACE;
-  stats.records = 0;
+  table_scan_now_cur = 0;
   return 0;
 }
 
@@ -550,8 +550,12 @@ int ha_avid::rnd_end() {
 */
 int ha_avid::rnd_next(uchar *buf) {
   DBUG_TRACE;
-  my_bitmap_map *org_bitmap;
 
+  if (table_scan_now_cur == bufPool->pages->pageHeader.tupleCount) {
+    return HA_ERR_END_OF_FILE;
+  }
+
+  my_bitmap_map *org_bitmap;
   memset(buf, 0, table->s->null_bytes);
   org_bitmap = tmp_use_all_columns(table, table->write_set);
 
@@ -560,28 +564,22 @@ int ha_avid::rnd_next(uchar *buf) {
     fixedSize += (*field)->data_length();
   }
 
-  uchar *readBuf = (uchar *)calloc(sizeof(uchar), fixedSize);
+  uchar *tupleBuf = (uchar *)calloc(sizeof(uchar), fixedSize);
   // read fix size columns
-  bufPool->read(readBuf, fixedSize, 1, 0);
-  buffer.length(0);
+  bufPool->read(tupleBuf, fixedSize, table_scan_now_cur + 1, 0);
 
-//  for (Field **field = table->field; *field; field++) {
-    /*
+  int fieldCount = 0;
+  for (Field **field = table->field; *field; field++) {
     uint32 dataLength = (*field)->data_length();
-    char *columnBuf = (char *)calloc(sizeof(uchar), dataLength);
-    memcpy(columnBuf, readBuf, dataLength);
-    free(columnBuf);*/
-  /*  buffer.append('1');
-    (*field)->store(buffer.ptr(), buffer.length(), buffer.charset());
-    std::cout << "insert" << std::endl;
-  }*/
-  memcpy(buf, b, 6);
-  tmp_restore_column_map(table->write_set, org_bitmap);
-  free(readBuf);
-  if (cur > 0) {
-    return HA_ERR_END_OF_FILE;
+    uchar *columnBuf = (uchar *)calloc(sizeof(uchar), dataLength);
+    memcpy(columnBuf, (tupleBuf + (dataLength * fieldCount)), dataLength);
+    memcpy((buf + 1 + (dataLength * fieldCount)), columnBuf, dataLength);
+    free(columnBuf);
+    fieldCount++;
   }
-  cur++;
+  tmp_restore_column_map(table->write_set, org_bitmap);
+  free(tupleBuf);
+  table_scan_now_cur++;
   return 0;
 }
 
