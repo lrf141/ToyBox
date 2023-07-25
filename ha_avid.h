@@ -79,8 +79,6 @@ class ha_avid : public handler {
   THR_LOCK_DATA lock;          ///< MySQL lock
   Avid_share *share;        ///< Shared lock info
   Avid_share *get_share();  ///< Get the share
-  String buffer;
-  uchar *b;
   uint32_t table_scan_now_cur = 0;
 
  public:

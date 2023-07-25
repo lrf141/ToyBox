@@ -357,7 +357,6 @@ int ha_avid::write_row(uchar *buf) {
 void ha_avid::insert_to_page(uchar *record) {
   // skip null bitmap (first 1 byte)
   record = (record + 1);
-  uint32 fixedSizeColumnTotalSize = 0;
   uint32_t columnSize = 0;
   for (Field **field = table->field; *field; field++) {
     columnSize += (*field)->data_length();
@@ -374,7 +373,6 @@ void ha_avid::insert_to_page(uchar *record) {
       // skip read binary position
       record = (record + dataLength);
       insertPos += dataLength;
-      fixedSizeColumnTotalSize += dataLength;
     }
   }
   bufPool->write(fixedLengthBuf, columnSize, 0, 0);
