@@ -569,10 +569,7 @@ int ha_avid::rnd_next(uchar *buf) {
   int fieldCount = 0;
   for (Field **field = table->field; *field; field++) {
     uint32 dataLength = (*field)->data_length();
-    uchar *columnBuf = (uchar *)calloc(sizeof(uchar), dataLength);
-    memcpy(columnBuf, (tupleBuf + (dataLength * fieldCount)), dataLength);
-    memcpy((buf + 1 + (dataLength * fieldCount)), columnBuf, dataLength);
-    free(columnBuf);
+    memcpy((buf + 1 + (dataLength * fieldCount)), (tupleBuf + (dataLength * fieldCount)), dataLength);
     fieldCount++;
   }
   tmp_restore_column_map(table->write_set, org_bitmap);

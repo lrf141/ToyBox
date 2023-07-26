@@ -9,6 +9,9 @@
 // 4KB
 #define PAGE_SIZE 4096
 
+// PAGE_SIZE - PAGE_HEADER_SIZE
+#define PAGE_BODY_SIZE (PAGE_SIZE - PAGE_HEADER_SIZE)
+
 typedef struct Page_Header Page_Header;
 typedef struct Page Page;
 
@@ -19,7 +22,7 @@ struct Page_Header {
 
 struct Page {
   Page_Header pageHeader;
-  uint8_t body[PAGE_SIZE - sizeof(uint8_t) * PAGE_HEADER_SIZE];
+  uint8_t body[PAGE_BODY_SIZE];
 };
 
 #endif  // AVID_PAGE_H
