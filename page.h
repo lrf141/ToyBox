@@ -22,7 +22,7 @@ struct Page_Header {
 
 struct Page {
   Page_Header pageHeader;
-  uint8_t body[PAGE_SIZE - sizeof(uint8_t) * PAGE_HEADER_SIZE];
+  uint8_t body[PAGE_BODY_SIZE];
 };
 
 #endif  // AVID_PAGE_H
