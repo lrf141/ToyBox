@@ -16,7 +16,7 @@ void buf::BufPool::deinit_buffer_pool() {
 
 void buf::BufPool::write(uchar *buf, uint32_t size, int, int) {
   int beforeInsertTupleCount = this->pages->pageHeader.tupleCount;
-  int insertPosition = (PAGE_SIZE - PAGE_HEADER_SIZE) - (beforeInsertTupleCount * size) - (size + 1);
+  int insertPosition = PAGE_BODY_SIZE - (beforeInsertTupleCount * size) - (size + 1);
   write_fixed_size_part(buf, size, insertPosition, 0);
   this->pages->pageHeader.tupleCount++;
 }
@@ -26,7 +26,7 @@ void buf::BufPool::write_fixed_size_part(uchar *buf, uint32_t size, int position
 }
 
 void buf::BufPool::read(uchar *buf, uint32_t size, int tupleCount, int) {
-  int position = (PAGE_SIZE - PAGE_HEADER_SIZE) - (tupleCount * size) - 1;
+  int position = PAGE_BODY_SIZE - (tupleCount * size) - 1;
   read_fixed_size_part(buf, size, position, 0);
 }
 
