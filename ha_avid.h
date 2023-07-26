@@ -49,6 +49,7 @@
 #include "bufpool.h"
 #include "file.h"
 #include "sql_string.h"
+#include "system_table.h"
 
 #define PLUGIN_AUTHOR_ME "lrf141"
 

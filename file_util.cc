@@ -6,12 +6,17 @@
 #include <mysql/psi/mysql_file.h>
 
 
+// tableFilePath = "./[database]/[table].[ext]
 File FileUtil::create(PSI_file_key key, const char *tableFilePath, int srcLine, int createFlag, myf myfFlag) {
   return mysql_file_create(key, tableFilePath, srcLine, createFlag, myfFlag);
 }
 
 int FileUtil::close(File file, myf my_flags) {
   return mysql_file_close(file, my_flags);
+}
+
+File FileUtil::open(PSI_file_key key, const char *tableFilePath, int openFlag, myf flags) {
+  return mysql_file_open(key, tableFilePath, openFlag, flags);
 }
 
 int FileUtil::remove(PSI_file_key key, const char *tableFilePath, myf flags) {

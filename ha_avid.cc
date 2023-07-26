@@ -109,12 +109,20 @@
 #include "typelib.h"
 
 static PSI_file_key key_file_data;
+static PSI_file_key key_file_system;
 static PSI_file_info all_avid_files[] = {
-    {&key_file_data, "data", 0, 0, PSI_DOCUMENT_ME}
+    {&key_file_data, "data", 0, 0, PSI_DOCUMENT_ME},
+    {&key_file_system, "system", 0, 0, PSI_DOCUMENT_ME}
 };
+
 static PSI_memory_key buffer_pool_key;
 static PSI_memory_info all_avid_memory[] = {
     {&buffer_pool_key, "bufpool", 0, 0, PSI_DOCUMENT_ME}
+};
+
+static PSI_mutex_key key_mutex_avid_system;
+static PSI_mutex_info all_avid_mutexes[] = {
+    {&key_mutex_avid_system, "mutex_system", PSI_FLAG_SINGLETON, 0, PSI_DOCUMENT_ME}
 };
 
 static void init_avid_psi_keys() {
@@ -124,6 +132,9 @@ static void init_avid_psi_keys() {
 
     count = static_cast<int>(array_elements(all_avid_memory));
     mysql_memory_register(category, all_avid_memory, count);
+
+    count = static_cast<int>(array_elements(all_avid_mutexes));
+    mysql_mutex_register(category, all_avid_mutexes, count);
 }
 
 
@@ -132,6 +143,7 @@ static handler *avid_create_handler(handlerton *hton, TABLE_SHARE *table,
 
 handlerton *avid_hton;
 static buf::BufPool *bufPool;
+static mysql_mutex_t avid_system_table_lock;
 
 /* Interface to mysqld, to check system tables supported by SE */
 static bool avid_is_supported_system_table(const char *db,
@@ -153,6 +165,20 @@ static int avid_init_func(void *p) {
   buf::BufPool *bp = new buf::BufPool();
   bp->init_buffer_pool(buffer_pool_key, 100);
   bufPool = bp;
+
+  mysql_mutex_init(key_mutex_avid_system, &avid_system_table_lock, MY_MUTEX_INIT_FAST);
+
+  File fd = SystemTableImpl::open(key_file_system);
+  if (fd < 0) {
+    // does not exists SystemTableFile
+    SystemTableImpl::close(fd);
+    File systemTableFile = SystemTableImpl::create(key_file_system);
+    SystemTable *systemTable = (SystemTable *)malloc(sizeof(SystemTable));
+    systemTable->maxTableId = 0;
+    SystemTableImpl::write(systemTableFile, (uchar *)systemTable);
+    SystemTableImpl::close(systemTableFile);
+  }
+  SystemTableImpl::close(fd);
 
   return 0;
 }
@@ -873,12 +899,23 @@ static MYSQL_THDVAR_UINT(create_count_thdvar, 0, nullptr, nullptr, nullptr, 0,
 int ha_avid::create(const char *name, TABLE *form, HA_CREATE_INFO *,
                        dd::Table *) {
   DBUG_TRACE;
+  mysql_mutex_lock(&avid_system_table_lock);
   THD *thd = this->ha_thd();
   // FN_REFLEN is max table path size
   char tableFilePath[FN_REFLEN];
   File newTableFile;
 
   FileUtil::convertToTableFilePath(tableFilePath, name, ".json");
+
+  // Open System Table
+  File systemTableFile = SystemTableImpl::open(key_file_system);
+  if (systemTableFile < 0) {
+    return HA_ERR_CRASHED;
+  }
+  SystemTable *systemTable = SystemTableImpl::read(systemTableFile);
+  uint64_t maxTableId = systemTable->maxTableId++;
+  SystemTableImpl::write(systemTableFile, (uchar *)systemTable);
+  SystemTableImpl::close(systemTableFile);
 
   // TRUNCATE TABLE
   if (thd_sql_command(thd) == SQLCOM_TRUNCATE) {
@@ -887,6 +924,7 @@ int ha_avid::create(const char *name, TABLE *form, HA_CREATE_INFO *,
       return -1;
     }
   } else {
+    // CREATE TABLE
     newTableFile = TableFileImpl::create(key_file_data, tableFilePath);
     if (newTableFile < 0) {
       return -1;
@@ -896,7 +934,7 @@ int ha_avid::create(const char *name, TABLE *form, HA_CREATE_INFO *,
 
   // create table space part
   TableSpaceHeader tableSpaceHeader{};
-  tableSpaceHeader.tableSpaceId = 0;
+  tableSpaceHeader.tableSpaceId = maxTableId;
   tableSpaceHeader.pageCount = 0;
   size_t tableSpaceHeaderSize = TableFileImpl::writeTableSpaceHeader(newTableFile, tableSpaceHeader);
   assert(tableSpaceHeaderSize == TABLE_SPACE_HEADER_SIZE);
@@ -933,6 +971,7 @@ int ha_avid::create(const char *name, TABLE *form, HA_CREATE_INFO *,
   assert(pageSize == PAGE_SIZE);
 
   int err = TableFileImpl::close(newTableFile);
+  mysql_mutex_unlock(&avid_system_table_lock);
 
   return err;
 }
