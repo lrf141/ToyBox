@@ -301,15 +301,9 @@ int ha_avid::open(const char *name, int, uint, const dd::Table *) {
   TableSpaceHeader *tableSpaceHeader = TableFileImpl::readTableSpaceHeader(tableFile);
   share->tableSpaceHeader = tableSpaceHeader;
 
+  // このタイミングで何故か systemPageHeader の値と tableSpaceHeader の値が同じになる
   SystemPageHeader *systemPageHeader = TableFileImpl::readSystemPageHeader(tableFile);
   share->systemPageHeader = systemPageHeader;
-
-  int columnSize = static_cast<int>(systemPageHeader->columnCount);
-  for (int index = 0; index < columnSize; index++) {
-    ColumnInfo *columnInfo = (ColumnInfo *)malloc(sizeof(ColumnInfo));
-    columnInfo = TableFileImpl::readSystemPageColumnInfo(tableFile, index);
-    share->columnInfos.push_back(columnInfo);
-  }
 
   return 0;
 }
@@ -381,6 +375,9 @@ int ha_avid::write_row(uchar *buf) {
 }
 
 void ha_avid::insert_to_page(uchar *record) {
+
+  uint64_t tableId = get_share()->tableSpaceHeader->tableSpaceId;
+
   // skip null bitmap (first 1 byte)
   record = (record + 1);
   uint32_t columnSize = 0;
@@ -401,8 +398,7 @@ void ha_avid::insert_to_page(uchar *record) {
       insertPos += dataLength;
     }
   }
-  bufPool->write(fixedLengthBuf, columnSize, 0, 0);
-  bufPool->flush(share->tableFile);
+  bufPool->write(fixedLengthBuf, columnSize, tableId, share->tableSpaceHeader->pageCount, share->tableFile);
   free(fixedLengthBuf);
 }
 
@@ -549,6 +545,8 @@ int ha_avid::index_last(uchar *) {
 int ha_avid::rnd_init(bool) {
   DBUG_TRACE;
   table_scan_now_cur = 0;
+  page_scan_now_cur = 0;
+  page_row_scan_now_cur = 0;
   return 0;
 }
 
@@ -575,8 +573,15 @@ int ha_avid::rnd_end() {
 int ha_avid::rnd_next(uchar *buf) {
   DBUG_TRACE;
 
-  if (table_scan_now_cur == bufPool->pages->pageHeader.tupleCount) {
-    return HA_ERR_END_OF_FILE;
+  uint64_t tableId = share->tableSpaceHeader->tableSpaceId;
+
+  if (share->tableSpaceHeader->pageCount == page_scan_now_cur) {
+    Page *page = TableFileImpl::readPage(share->tableFile, page_scan_now_cur);
+    uint32_t tupleCount = page->pageHeader.tupleCount;
+    free(page);
+    if (tupleCount == page_row_scan_now_cur) {
+      return HA_ERR_END_OF_FILE;
+    }
   }
 
   my_bitmap_map *org_bitmap;
@@ -590,7 +595,7 @@ int ha_avid::rnd_next(uchar *buf) {
 
   uchar *tupleBuf = (uchar *)calloc(sizeof(uchar), fixedSize);
   // read fix size columns
-  bufPool->read(tupleBuf, fixedSize, table_scan_now_cur + 1, 0);
+  bufPool->read(tupleBuf, fixedSize, table_scan_now_cur + 1, tableId, page_scan_now_cur, share->tableFile);
 
   int fieldCount = 0;
   for (Field **field = table->field; *field; field++) {
@@ -598,9 +603,18 @@ int ha_avid::rnd_next(uchar *buf) {
     memcpy((buf + 1 + (dataLength * fieldCount)), (tupleBuf + (dataLength * fieldCount)), dataLength);
     fieldCount++;
   }
+
   tmp_restore_column_map(table->write_set, org_bitmap);
   free(tupleBuf);
+
+  if (!bufPool->hasNextTuple(0, tableId, page_scan_now_cur)) {
+    page_scan_now_cur++;
+    page_row_scan_now_cur = 0;
+  } else {
+    page_row_scan_now_cur++;
+  }
   table_scan_now_cur++;
+
   return 0;
 }
 

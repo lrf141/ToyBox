@@ -4,6 +4,7 @@
 #include <mysql/psi/mysql_file.h>
 
 #include "file.h"
+#include "page.h"
 
 class TableFileImpl {
  public:
@@ -21,6 +22,7 @@ class TableFileImpl {
    static size_t writeSystemPageHeader(File fd, SystemPageHeader systemPageHeader);
    static ColumnInfo *readSystemPageColumnInfo(File fd, int index);
    static size_t writeSystemPageColumnInfo(File fd, ColumnInfo columnInfo, int index);
+   static Page *readPage(File fd, uint32_t pageId);
    static size_t reservePage(File fd, int pageId);
 };
 

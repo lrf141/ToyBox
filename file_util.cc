@@ -43,5 +43,6 @@ size_t FileUtil::write(File fd, uchar *buf, int writeSize) {
  * @param flags myf
  */
 void FileUtil::seek(File fd, my_off_t position, int whence, myf flags) {
+  mysql_file_seek(fd, 0, MY_SEEK_SET, flags);
   mysql_file_seek(fd, position, whence, flags);
 }
