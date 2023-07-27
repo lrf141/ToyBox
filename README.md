@@ -20,7 +20,7 @@ mysql-server$ mkdir build && cd $_
 mysql-server/build$ cmake ../ -DCMAKE_BUILD_TYPE=Debug -DWITH_BOOST=./boost -DDOWNLOAD_BOOST=1
 ```
 
-### (Option) Run mysql-test-run
+### (Optional) Run mysql-test-run
 ```bash
 mysql-server/storage/avid$ ./mtr/setup-test.sh
 mysql-server/storage/avid$ cd ../../build/mysql-test
