@@ -59,7 +59,7 @@ bool buf::BufPool::isExistPage(uint64_t tableId, uint32_t pageId) {
     return false;
   }
 
-  for(Element *element = this->elements; element->next != nullptr; element = element->next) {
+  for(Element *element = this->elements; element != nullptr; element = element->next) {
     if (element->tableSpaceId != tableId) {
       continue;
     }
