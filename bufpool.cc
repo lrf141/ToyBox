@@ -82,6 +82,7 @@ bool buf::BufPool::hasNextTuple(uint32_t tupleId, uint64_t tableId, int pageId) 
 Page *buf::BufPool::get(uint64_t tableId, uint32_t pageId) {
   for (Element *element = this->elements; element != nullptr; element = elements->next) {
     if (element->tableSpaceId == tableId && element->page->pageHeader.page_id == pageId) {
+      element->refCount++;
       return element->page;
     }
   }
