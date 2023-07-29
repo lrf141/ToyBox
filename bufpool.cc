@@ -8,7 +8,19 @@ void buf::BufPool::init_buffer_pool(PSI_memory_key, int bufPoolSize) {
 }
 
 void buf::BufPool::deinit_buffer_pool() {
-  my_free(this->pages);
+  releaseAllPage();
+}
+
+void buf::BufPool::releaseAllPage() {
+  if (this->elements == nullptr) {
+    return;
+  }
+
+  for(Element *element = this->elements; element != nullptr;) {
+    Element *tmp = element->next;
+    free(element);
+    element = tmp;
+  }
 }
 
 void buf::BufPool::write(uchar *buf, uint32_t size, uint64_t tableId, uint32_t pageId, File fd) {

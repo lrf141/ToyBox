@@ -28,6 +28,7 @@ class BufPool {
   void read_fixed_size_part(uchar *buf, uint32_t size, int position, Page* page);
   void readFromFile(File fd, uint64_t tableId, uint32_t pageId);
   Page *get(uint64_t tableId, uint32_t pageId);
+  void releaseAllPage();
  public:
   Element *elements = nullptr;
   Page *pages;
