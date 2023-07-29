@@ -129,8 +129,6 @@ Page *TableFileImpl::readPage(File fd, uint32_t pageId) {
   my_off_t offset = TABLE_SPACE_START_POSITION + TABLE_SPACE_HEADER_SIZE + SYSTEM_PAGE_SIZE + (PAGE_SIZE * pageId);
   FileUtil::seek(fd, offset, MY_SEEK_SET, MYF(0));
   size_t readSize = read(fd, buf, PAGE_SIZE);
-  std::cout << "read page size: ";
-  std::cout << readSize << std::endl;
   assert(readSize == PAGE_SIZE);
   memcpy(page, buf, PAGE_SIZE);
   free(buf);
