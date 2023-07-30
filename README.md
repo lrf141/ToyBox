@@ -14,7 +14,7 @@ mysql-server/$ cd storage/
 mysql-server/storage$ git clone git@github.com:lrf141/avid.git
 ```
 
-### Build MySQL Server
+### Build with MySQL Server
 ```bash
 mysql-server$ mkdir build && cd $_
 mysql-server/build$ cmake ../ -DCMAKE_BUILD_TYPE=Debug -DWITH_BOOST=./boost -DDOWNLOAD_BOOST=1
@@ -25,4 +25,11 @@ mysql-server/build$ cmake ../ -DCMAKE_BUILD_TYPE=Debug -DWITH_BOOST=./boost -DDO
 mysql-server/storage/avid$ ./mtr/setup-test.sh
 mysql-server/storage/avid$ cd ../../build/mysql-test
 mysql-server/build/mysql-test$ ./mtr --suite avid
+```
+
+### Install/Uninstall Plugin
+```sql
+mysql> INSTALL PLUGIN avid SONAME 'ha_avid.so';
+
+mysql> UNINSTALL PLUGIN avid;
 ```
