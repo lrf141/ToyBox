@@ -49,6 +49,7 @@
 #include "bufpool.h"
 #include "file.h"
 #include "sql_string.h"
+#include "system_table.h"
 
 #define PLUGIN_AUTHOR_ME "lrf141"
 
@@ -80,6 +81,8 @@ class ha_avid : public handler {
   Avid_share *share;        ///< Shared lock info
   Avid_share *get_share();  ///< Get the share
   uint32_t table_scan_now_cur = 0;
+  uint32_t page_scan_now_cur = 0;
+  uint32_t page_row_scan_now_cur = 0;
 
  public:
   ha_avid(handlerton *hton, TABLE_SHARE *table_arg);
