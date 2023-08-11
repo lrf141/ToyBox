@@ -63,7 +63,6 @@ class Avid_share : public Handler_share {
   File tableFile;
   TableSpaceHeader *tableSpaceHeader;
   SystemPageHeader *systemPageHeader;
-  std::vector<ColumnInfo *> columnInfos;
 
   // example: [database name]/[table name].[ext]
   char tableFilePath[FN_REFLEN];

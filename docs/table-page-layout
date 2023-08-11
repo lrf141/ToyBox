@@ -1,4 +1,4 @@
-<mxfile host="app.diagrams.net" modified="2023-07-28T00:58:44.588Z" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36" etag="xT8jJG2xeYryQMGGlN8p" version="21.6.5" type="device">
+<mxfile host="app.diagrams.net" modified="2023-08-11T15:19:35.849Z" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36" etag="ZuR-ooWfx7XP3RsMVRod" version="21.6.6" type="device">
   <diagram name="ページ1" id="qp1X_snr1Usr0zYjhWub">
     <mxGraphModel dx="1434" dy="830" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2339" pageHeight="3300" background="#ffffff" math="0" shadow="0">
       <root>
@@ -74,33 +74,6 @@
         </mxCell>
         <mxCell id="JxwGZU3mzutddpgpnhln-17" value="Page Count (8 byte)" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="730" y="340" width="280" height="40" as="geometry" />
-        </mxCell>
-        <mxCell id="JxwGZU3mzutddpgpnhln-22" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="JxwGZU3mzutddpgpnhln-19" target="JxwGZU3mzutddpgpnhln-20" edge="1">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="JxwGZU3mzutddpgpnhln-19" value="(Deprecated)Column Info (Fixed: 72 byte)" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="390" y="340" width="280" height="40" as="geometry" />
-        </mxCell>
-        <mxCell id="JxwGZU3mzutddpgpnhln-20" value="Column Type (1 byte)" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="730" y="410" width="280" height="40" as="geometry" />
-        </mxCell>
-        <mxCell id="JxwGZU3mzutddpgpnhln-21" value="Is Nullable (1 byte + 2byte padding)" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="730" y="450" width="280" height="40" as="geometry" />
-        </mxCell>
-        <mxCell id="JxwGZU3mzutddpgpnhln-23" value="Data Size (4 byte)" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="730" y="490" width="280" height="40" as="geometry" />
-        </mxCell>
-        <mxCell id="JxwGZU3mzutddpgpnhln-24" value="(Deprecated)Column Info (Fixed: 72 byte)" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="390" y="430" width="280" height="40" as="geometry" />
-        </mxCell>
-        <mxCell id="JxwGZU3mzutddpgpnhln-25" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;endArrow=none;endFill=0;dashed=1;dashPattern=8 8;" parent="1" source="JxwGZU3mzutddpgpnhln-19" edge="1">
-          <mxGeometry relative="1" as="geometry">
-            <mxPoint x="490" y="600" as="sourcePoint" />
-            <mxPoint x="530" y="430" as="targetPoint" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="JxwGZU3mzutddpgpnhln-26" value="Column Name (64 byte&lt;br&gt;Max Column Name Size in MySQL)" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="730" y="530" width="280" height="40" as="geometry" />
         </mxCell>
         <mxCell id="JxwGZU3mzutddpgpnhln-28" value="Table Space Id (8 byte)" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="1030" y="220" width="280" height="40" as="geometry" />

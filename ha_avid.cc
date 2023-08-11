@@ -301,7 +301,6 @@ int ha_avid::open(const char *name, int, uint, const dd::Table *) {
   TableSpaceHeader *tableSpaceHeader = TableFileImpl::readTableSpaceHeader(tableFile);
   share->tableSpaceHeader = tableSpaceHeader;
 
-  // このタイミングで何故か systemPageHeader の値と tableSpaceHeader の値が同じになる
   SystemPageHeader *systemPageHeader = TableFileImpl::readSystemPageHeader(tableFile);
   share->systemPageHeader = systemPageHeader;
 
@@ -967,19 +966,6 @@ int ha_avid::create(const char *name, TABLE *form, HA_CREATE_INFO *,
   systemPageHeader.columnCount = columnCount;
   size_t systemPageHeaderSize = TableFileImpl::writeSystemPageHeader(newTableFile, systemPageHeader);
   assert(systemPageHeaderSize == SYSTEM_PAGE_HEADER_SIZE);
-
-
-  int index = 0;
-  for (Field **field = form->s->field; *field; field++) {
-    ColumnInfo columnInfo{};
-    columnInfo.type = (*field)->data_length() == 0 ? VARIABLE_SIZE_COLUMN : FIX_SIZE_COLUMN;
-    columnInfo.isNull = (*field)->is_nullable();
-    columnInfo.dataSize = (*field)->data_length();
-    strcpy(columnInfo.name, (*field)->field_name);
-    size_t columnInfoSize = TableFileImpl::writeSystemPageColumnInfo(newTableFile, columnInfo, index);
-    assert(columnInfoSize == COLUMN_INFO_SIZE);
-    index++;
-  }
 
   size_t pageSize = TableFileImpl::reservePage(newTableFile, 0);
   assert(pageSize == PAGE_SIZE);
