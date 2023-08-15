@@ -28,6 +28,7 @@ TEST_F(BufPoolTest, readFixedSizePart) {
   uint32_t readSize = 8; // byte
   uint8_t result[8];
   page->pageHeader.tupleCount = 1;
+  // Initialize 8 bytes from the end
   for (int i = 0; i < static_cast<int>(readSize); i++) {
     page->body[PAGE_BODY_SIZE - (i + 1)] = 1;
   }
