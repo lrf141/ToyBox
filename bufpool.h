@@ -25,7 +25,6 @@ class BufPool {
   uint64_t maxPageCount;
   bool isExistPage(uint64_t tableId, uint32_t pageId);
   void write_fixed_size_part(uchar *buf, uint32_t size, int position, Page *page);
-  void read_fixed_size_part(uchar *buf, uint32_t size, int position, Page* page);
   void readFromFile(File fd, uint64_t tableId, uint32_t pageId);
   Page *get(uint64_t tableId, uint32_t pageId);
   void releaseAllPage();
@@ -38,6 +37,9 @@ class BufPool {
   void read(uchar *buf, uint32_t size, int tupleId, int tableId, int pageId, File fd);
   void flush(File fd, Page *page, uint32_t pageId);
   bool hasNextTuple(uint32_t tupleId, uint64_t tableId, int pageId);
+
+  // Visible for Testing
+  void read_fixed_size_part(uchar *buf, uint32_t size, int position, Page* page);
 };
 }
 
