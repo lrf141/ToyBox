@@ -95,4 +95,6 @@ TEST_F(BufPoolTest, existPage) {
   // Exercise and Verify
   ASSERT_EQ(sut->existPage(1, 1), true);
   ASSERT_EQ(sut->existPage(0, 0), false);
+  ASSERT_EQ(sut->existPage(1, 0), false);
+  ASSERT_EQ(sut->existPage(0, 1), false);
 }
