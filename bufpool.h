@@ -24,7 +24,6 @@ class BufPool {
   uint64_t pageCount = 0;
   uint64_t maxPageCount;
   bool isExistPage(uint64_t tableId, uint32_t pageId);
-  void write_fixed_size_part(uchar *buf, uint32_t size, int position, Page *page);
   void readFromFile(File fd, uint64_t tableId, uint32_t pageId);
   Page *get(uint64_t tableId, uint32_t pageId);
   void releaseAllPage();
@@ -40,6 +39,7 @@ class BufPool {
 
   // Visible for Testing
   void read_fixed_size_part(uchar *buf, uint32_t size, int position, Page* page);
+  void write_fixed_size_part(uchar *buf, uint32_t size, int position, Page *page);
 };
 }
 
