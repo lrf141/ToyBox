@@ -24,7 +24,7 @@ void buf::BufPool::releaseAllPage() {
 }
 
 void buf::BufPool::write(uchar *buf, uint32_t size, uint64_t tableId, uint32_t pageId, File fd) {
-  if (!isExistPage(tableId, pageId)) {
+  if (!existPage(tableId, pageId)) {
     readFromFile(fd, tableId, pageId);
   }
 
@@ -53,7 +53,7 @@ void buf::BufPool::write_fixed_size_part(uchar *buf, uint32_t size, int position
 }
 
 void buf::BufPool::read(uchar *buf, uint32_t size, int tupleCount, int tableId, int pageId, File fd) {
-  if (!isExistPage(tableId, pageId)) {
+  if (!existPage(tableId, pageId)) {
     // read from File
     readFromFile(fd, tableId, pageId);
   }
@@ -66,7 +66,7 @@ void buf::BufPool::read_fixed_size_part(uchar *buf, uint32_t size, int position,
   memcpy(buf, (page->body + position), size);
 }
 
-bool buf::BufPool::isExistPage(uint64_t tableId, uint32_t pageId) {
+bool buf::BufPool::existPage(uint64_t tableId, uint32_t pageId) {
   if(this->elements == nullptr) {
     return false;
   }

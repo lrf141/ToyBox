@@ -74,3 +74,25 @@ TEST_F(BufPoolTest, getReadFixedPartPosition) {
   // Verify
   ASSERT_EQ(res, PAGE_BODY_SIZE - size);
 }
+
+TEST_F(BufPoolTest, existPageWithNoElements) {
+  // Exercise and Verify
+  ASSERT_EQ(sut->existPage(0, 0), false);
+}
+
+TEST_F(BufPoolTest, existPage) {
+  // Setup
+  uint64_t tableId = 1;
+  uint32_t pageId = 1;
+  page->pageHeader.page_id = pageId;
+  buf::Element *newElement = (buf::Element *)malloc(sizeof(buf::Element));
+  newElement->next = nullptr;
+  newElement->refCount = 0;
+  newElement->tableSpaceId = tableId;
+  newElement->page = page;
+  sut->elements = newElement;
+
+  // Exercise and Verify
+  ASSERT_EQ(sut->existPage(1, 1), true);
+  ASSERT_EQ(sut->existPage(0, 0), false);
+}
