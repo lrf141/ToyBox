@@ -2,6 +2,7 @@
 #include "file_util.h"
 #include "my_sys.h"
 #include "mysql/service_mysql_alloc.h"
+#include <iostream>
 
 void buf::BufPool::init_buffer_pool(PSI_memory_key, int bufPoolSize) {
   this->maxPageCount = bufPoolSize;
@@ -32,7 +33,7 @@ void buf::BufPool::write(uchar *buf, uint32_t size, uint64_t tableId, uint32_t p
   assert(page != nullptr);
 
   uint32_t beforeInsertTupleCount = page->pageHeader.tupleCount;
-  int insertPosition = PAGE_BODY_SIZE - (beforeInsertTupleCount * size) - (size + 1);
+  int insertPosition = PAGE_BODY_SIZE - (beforeInsertTupleCount * size) - size;
   write_fixed_size_part(buf, size, insertPosition, page);
   page->pageHeader.tupleCount++;
   flush(fd, page, pageId);
@@ -57,7 +58,7 @@ void buf::BufPool::read(uchar *buf, uint32_t size, int tupleCount, int tableId, 
     // read from File
     readFromFile(fd, tableId, pageId);
   }
-  int position = PAGE_BODY_SIZE - (tupleCount * size) - 1;
+  int position = PAGE_BODY_SIZE - (tupleCount * size);
   Page *page = get(tableId, pageId);
   read_fixed_size_part(buf, size, position, page);
 }
