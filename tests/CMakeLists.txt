@@ -20,5 +20,5 @@ ENDFOREACH ()
 MYSQL_ADD_EXECUTABLE(avid_tests ${ALL_AVID_TESTS}
         ENABLE_EXPORTS
         ADD_TEST avid_tests
-        LINK_LIBRARIES avid gunit_large server_unittest_library
+        LINK_LIBRARIES gunit_large server_unittest_library
 )
