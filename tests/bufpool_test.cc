@@ -32,16 +32,20 @@ TEST_F(BufPoolTest, readFixedSizePart) {
   for (int i = 0; i < static_cast<int>(readSize); i++) {
     page->body[PAGE_BODY_SIZE - (i + 1)] = 1;
   }
-  int readPosition = PAGE_BODY_SIZE - (page->pageHeader.tupleCount * readSize) - 1;
+  int readPosition = PAGE_BODY_SIZE - (page->pageHeader.tupleCount * readSize);
 
   // Exercise
   sut->read_fixed_size_part(result, readSize, readPosition, page);
 
   // Verify
-  for (int i = 0; i < PAGE_BODY_SIZE - (1 + static_cast<int>(readSize)); i++) {
+  int i = 0;
+  for (; i < PAGE_BODY_SIZE - static_cast<int>(readSize); i++) {
     ASSERT_EQ(page->body[i], 0);
   }
-  for (int i = 0; i < static_cast<int>(readSize); ++i) {
-    ASSERT_EQ(page->body[PAGE_BODY_SIZE - (i + 1)], 1);
+  for (; i < PAGE_BODY_SIZE; i++) {
+    ASSERT_EQ(page->body[i], 1);
+  }
+  for (i = 0; i < static_cast<int>(readSize); i++) {
+    ASSERT_EQ(result[i], 1);
   }
 }
