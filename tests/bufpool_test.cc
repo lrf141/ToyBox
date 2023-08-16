@@ -28,7 +28,6 @@ TEST_F(BufPoolTest, readFixedSizePart) {
   uchar result[4];
   uint32_t readSize = 4; // byte
   int tupleCount = 1;
-  std::cout << "Page Body Size: " << sizeof(page->body) << std::endl;
 
   // Initialize 4 bytes from the end
   for (int i = PAGE_BODY_SIZE - static_cast<int>(readSize); i < PAGE_BODY_SIZE; i++) {
@@ -50,4 +49,28 @@ TEST_F(BufPoolTest, readFixedSizePart) {
   for (i = 0; i < static_cast<int>(readSize); i++) {
     ASSERT_EQ(result[i], 1);
   }
+}
+
+TEST_F(BufPoolTest, getWriteFixedPartPosition) {
+  // Setup
+  int beforeInsertTupleCount = 0;
+  int size = 4;
+
+  // Exercise
+  int res = sut->getWriteFixedPartPosition(beforeInsertTupleCount, size);
+
+  // Verify
+  ASSERT_EQ(res, PAGE_BODY_SIZE - 4);
+}
+
+TEST_F(BufPoolTest, getReadFixedPartPosition) {
+  // Setup
+  int tupleCount = 1;
+  int size = 4;
+
+  // Exercise
+  int res = sut->getReadFixedPartPosition(tupleCount, size);
+
+  // Verify
+  ASSERT_EQ(res, PAGE_BODY_SIZE - size);
 }

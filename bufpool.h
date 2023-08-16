@@ -40,6 +40,8 @@ class BufPool {
   // Visible for Testing
   void read_fixed_size_part(uchar *buf, uint32_t size, int position, Page* page);
   void write_fixed_size_part(uchar *buf, uint32_t size, int position, Page *page);
+  int getReadFixedPartPosition(int tupleCount, int size);
+  int getWriteFixedPartPosition(int beforeInsertTupleCount, int size);
 };
 }
 
