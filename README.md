@@ -1,4 +1,6 @@
-# avid
+# Toybox
+
+Simple Storage Engine for MySQL
 
 ## How to build
 
@@ -11,7 +13,7 @@ $ cd mysql-server
 ### Clone this repository
 ```bash
 mysql-server/$ cd storage/
-mysql-server/storage$ git clone git@github.com:lrf141/avid.git
+mysql-server/storage$ git clone git@github.com:lrf141/toybox.git
 ```
 
 ### Build with MySQL Server
@@ -22,19 +24,19 @@ mysql-server/build$ cmake ../ -DCMAKE_BUILD_TYPE=Debug -DWITH_BOOST=./boost -DDO
 
 ### (Optional) Run mysql-test-run
 ```bash
-mysql-server/storage/avid$ ./mtr/setup-test.sh
-mysql-server/storage/avid$ cd ../../build/mysql-test
-mysql-server/build/mysql-test$ ./mtr --suite avid
+mysql-server/storage/toybox$ ./mtr/setup-test.sh
+mysql-server/storage/toybox$ cd ../../build/mysql-test
+mysql-server/build/mysql-test$ ./mtr --suite toybox
 ```
 
 ### (Optional) Run unit test
 ```
-mysql-server/build$ ./runtime_output_directory/avid_tests 
+mysql-server/build$ ./runtime_output_directory/toybox_tests 
 ```
 
 ### (Deprecated) Install/Uninstall Plugin
 ```sql
-mysql> INSTALL PLUGIN avid SONAME 'ha_avid.so';
+mysql> INSTALL PLUGIN toybox SONAME 'ha_toybox.so';
 
-mysql> UNINSTALL PLUGIN avid;
+mysql> UNINSTALL PLUGIN toybox;
 ```

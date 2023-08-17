@@ -1,5 +1,5 @@
-#ifndef MYSQL_TABLE_FILE_H
-#define MYSQL_TABLE_FILE_H
+#ifndef TOYBOX_TABLE_FILE_H
+#define TOYBOX_TABLE_FILE_H
 
 #include <mysql/psi/mysql_file.h>
 
@@ -24,4 +24,4 @@ class TableFileImpl {
    static size_t reservePage(File fd, int pageId);
 };
 
-#endif  // MYSQL_TABLE_FILE_H
+#endif  // TOYBOX_TABLE_FILE_H

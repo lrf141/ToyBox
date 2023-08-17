@@ -1,7 +1,7 @@
-#ifndef MYSQL_SYSTEM_TABLE_H
-#define MYSQL_SYSTEM_TABLE_H
+#ifndef TOYBOX_SYSTEM_TABLE_H
+#define TOYBOX_SYSTEM_TABLE_H
 
-#define SYSTEM_TABLE_PATH "./avidsys"
+#define SYSTEM_TABLE_PATH "./toyboxsys"
 // 8byte
 #define MAX_PAGE_ID_SIZE 8
 
@@ -22,4 +22,4 @@ class SystemTableImpl {
   static int close(File fd);
 };
 
-#endif  // MYSQL_SYSTEM_TABLE_H
+#endif  // TOYBOX_SYSTEM_TABLE_H

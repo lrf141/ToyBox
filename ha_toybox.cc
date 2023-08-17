@@ -21,70 +21,70 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA */
 
 /**
-  @file ha_avid.cc
+  @file ha_toybox.cc
 
   @brief
-  The ha_avid engine is a stubbed storage engine for avid purposes only;
+  The ha_toybox engine is a stubbed storage engine for toybox purposes only;
   it does nothing at this point. Its purpose is to provide a source
   code illustration of how to begin writing new storage engines; see also
-  /storage/avid/ha_avid.h.
+  /storage/toybox/ha_toybox.h.
 
   @details
-  ha_avid will let you create/open/delete tables, but
-  nothing further (for avid, indexes are not supported nor can data
-  be stored in the table). Use this avid as a template for
+  ha_toybox will let you create/open/delete tables, but
+  nothing further (for toybox, indexes are not supported nor can data
+  be stored in the table). Use this toybox as a template for
   implementing the same functionality in your own storage engine. You
-  can enable the avid storage engine in your build by doing the
+  can enable the toybox storage engine in your build by doing the
   following during your build process:<br> ./configure
-  --with-avid-storage-engine
+  --with-toybox-storage-engine
 
   Once this is done, MySQL will let you create tables with:<br>
   CREATE TABLE \<table name\> (...) ENGINE=EXAMPLE;
 
-  The avid storage engine is set up to use table locks. It
-  implements an avid "SHARE" that is inserted into a hash by table
+  The toybox storage engine is set up to use table locks. It
+  implements an toybox "SHARE" that is inserted into a hash by table
   name. You can use this to store information of state that any
-  avid handler object will be able to see when it is using that
+  toybox handler object will be able to see when it is using that
   table.
 
-  Please read the object definition in ha_avid.h before reading the rest
+  Please read the object definition in ha_toybox.h before reading the rest
   of this file.
 
   @note
   When you create an EXAMPLE table, the MySQL Server creates a table .frm
   (format) file in the database directory, using the table name as the file
   name as is customary with MySQL. No other files are created. To get an idea
-  of what occurs, here is an avid select that would do a scan of an entire
+  of what occurs, here is an toybox select that would do a scan of an entire
   table:
 
   @code
-  ha_avid::store_lock
-  ha_avid::external_lock
-  ha_avid::info
-  ha_avid::rnd_init
-  ha_avid::extra
-  ha_avid::rnd_next
-  ha_avid::rnd_next
-  ha_avid::rnd_next
-  ha_avid::rnd_next
-  ha_avid::rnd_next
-  ha_avid::rnd_next
-  ha_avid::rnd_next
-  ha_avid::rnd_next
-  ha_avid::rnd_next
-  ha_avid::extra
-  ha_avid::external_lock
-  ha_avid::extra
+  ha_toybox::store_lock
+  ha_toybox::external_lock
+  ha_toybox::info
+  ha_toybox::rnd_init
+  ha_toybox::extra
+  ha_toybox::rnd_next
+  ha_toybox::rnd_next
+  ha_toybox::rnd_next
+  ha_toybox::rnd_next
+  ha_toybox::rnd_next
+  ha_toybox::rnd_next
+  ha_toybox::rnd_next
+  ha_toybox::rnd_next
+  ha_toybox::rnd_next
+  ha_toybox::extra
+  ha_toybox::external_lock
+  ha_toybox::extra
   ENUM HA_EXTRA_RESET        Reset database to after open
   @endcode
 
-  Here you see that the avid storage engine has 9 rows called before
+  Here you see that the toybox storage engine has 9 rows called before
   rnd_next signals that it has reached the end of its data. Also note that
   the table in question was already opened; had it not been open, a call to
-  ha_avid::open() would also have been necessary. Calls to
-  ha_avid::extra() are hints as to what will be occurring to the request.
+  ha_toybox::open() would also have been necessary. Calls to
+  ha_toybox::extra() are hints as to what will be occurring to the request.
 
-  A Longer Avid can be found called the "Skeleton Engine" which can be
+  A Longer Toybox can be found called the "Skeleton Engine" which can be
   found on TangentOrg. It has both an engine and a full build environment
   for building a pluggable storage engine.
 
@@ -96,8 +96,8 @@
 #include <algorithm>
 #include <iostream>
 
-#include "storage/avid/ha_avid.h"
-#include "avid_errorno.h"
+#include "storage/toybox/ha_toybox.h"
+#include "toybox_errorno.h"
 
 #include "file_util.h"
 #include "my_dbug.h"
@@ -110,63 +110,63 @@
 
 static PSI_file_key key_file_data;
 static PSI_file_key key_file_system;
-static PSI_file_info all_avid_files[] = {
+static PSI_file_info all_toybox_files[] = {
     {&key_file_data, "data", 0, 0, PSI_DOCUMENT_ME},
     {&key_file_system, "system", 0, 0, PSI_DOCUMENT_ME}
 };
 
 static PSI_memory_key buffer_pool_key;
-static PSI_memory_info all_avid_memory[] = {
+static PSI_memory_info all_toybox_memory[] = {
     {&buffer_pool_key, "bufpool", 0, 0, PSI_DOCUMENT_ME}
 };
 
-static PSI_mutex_key key_mutex_avid_system;
-static PSI_mutex_info all_avid_mutexes[] = {
-    {&key_mutex_avid_system, "mutex_system", PSI_FLAG_SINGLETON, 0, PSI_DOCUMENT_ME}
+static PSI_mutex_key key_mutex_toybox_system;
+static PSI_mutex_info all_toybox_mutexes[] = {
+    {&key_mutex_toybox_system, "mutex_system", PSI_FLAG_SINGLETON, 0, PSI_DOCUMENT_ME}
 };
 
-static void init_avid_psi_keys() {
-    const char *category = "avid";
-    int count = static_cast<int>(array_elements(all_avid_files));
-    mysql_file_register(category, all_avid_files, count);
+static void init_toybox_psi_keys() {
+    const char *category = "toybox";
+    int count = static_cast<int>(array_elements(all_toybox_files));
+    mysql_file_register(category, all_toybox_files, count);
 
-    count = static_cast<int>(array_elements(all_avid_memory));
-    mysql_memory_register(category, all_avid_memory, count);
+    count = static_cast<int>(array_elements(all_toybox_memory));
+    mysql_memory_register(category, all_toybox_memory, count);
 
-    count = static_cast<int>(array_elements(all_avid_mutexes));
-    mysql_mutex_register(category, all_avid_mutexes, count);
+    count = static_cast<int>(array_elements(all_toybox_mutexes));
+    mysql_mutex_register(category, all_toybox_mutexes, count);
 }
 
 
-static handler *avid_create_handler(handlerton *hton, TABLE_SHARE *table,
+static handler *toybox_create_handler(handlerton *hton, TABLE_SHARE *table,
                                        bool partitioned, MEM_ROOT *mem_root);
 
-handlerton *avid_hton;
+handlerton *toybox_hton;
 static buf::BufPool *bufPool;
-static mysql_mutex_t avid_system_table_lock;
+static mysql_mutex_t toybox_system_table_lock;
 
 /* Interface to mysqld, to check system tables supported by SE */
-static bool avid_is_supported_system_table(const char *db,
+static bool toybox_is_supported_system_table(const char *db,
                                               const char *table_name,
                                               bool is_sql_layer_system_table);
 
-Avid_share::Avid_share() { thr_lock_init(&lock); }
+Toybox_share::Toybox_share() { thr_lock_init(&lock); }
 
-static int avid_init_func(void *p) {
+static int toybox_init_func(void *p) {
   DBUG_TRACE;
 
-  init_avid_psi_keys();
+  init_toybox_psi_keys();
 
-  avid_hton = (handlerton *)p;
-  avid_hton->state = SHOW_OPTION_YES;
-  avid_hton->create = avid_create_handler;
-  avid_hton->flags = HTON_CAN_RECREATE;
-  avid_hton->is_supported_system_table = avid_is_supported_system_table;
+  toybox_hton = (handlerton *)p;
+  toybox_hton->state = SHOW_OPTION_YES;
+  toybox_hton->create = toybox_create_handler;
+  toybox_hton->flags = HTON_CAN_RECREATE;
+  toybox_hton->is_supported_system_table = toybox_is_supported_system_table;
   buf::BufPool *bp = new buf::BufPool();
   bp->init_buffer_pool(buffer_pool_key, 100);
   bufPool = bp;
 
-  mysql_mutex_init(key_mutex_avid_system, &avid_system_table_lock, MY_MUTEX_INIT_FAST);
+  mysql_mutex_init(key_mutex_toybox_system, &toybox_system_table_lock, MY_MUTEX_INIT_FAST);
 
   File fd = SystemTableImpl::open(key_file_system);
   if (fd < 0) {
@@ -183,7 +183,7 @@ static int avid_init_func(void *p) {
   return 0;
 }
 
-static int avid_deinit_func(void *) {
+static int toybox_deinit_func(void *) {
   bufPool->deinit_buffer_pool();
   free(bufPool);
   return 0;
@@ -191,20 +191,20 @@ static int avid_deinit_func(void *) {
 
 /**
   @brief
-  Avid of simple lock controls. The "share" it creates is a
-  structure we will pass to each avid handler. Do you have to have
+  Example of simple lock controls. The "share" it creates is a
+  structure we will pass to each toybox handler. Do you have to have
   one of these? Well, you have pieces that are used for locking, and
   they are needed to function.
 */
 
-Avid_share *ha_avid::get_share() {
-  Avid_share *tmp_share;
+Toybox_share *ha_toybox::get_share() {
+  Toybox_share *tmp_share;
 
   DBUG_TRACE;
 
   lock_shared_ha_data();
-  if (!(tmp_share = static_cast<Avid_share *>(get_ha_share_ptr()))) {
-    tmp_share = new Avid_share;
+  if (!(tmp_share = static_cast<Toybox_share *>(get_ha_share_ptr()))) {
+    tmp_share = new Toybox_share;
     if (!tmp_share) goto err;
 
     set_ha_share_ptr(static_cast<Handler_share *>(tmp_share));
@@ -214,12 +214,12 @@ err:
   return tmp_share;
 }
 
-static handler *avid_create_handler(handlerton *hton, TABLE_SHARE *table,
+static handler *toybox_create_handler(handlerton *hton, TABLE_SHARE *table,
                                        bool, MEM_ROOT *mem_root) {
-  return new (mem_root) ha_avid(hton, table);
+  return new (mem_root) ha_toybox(hton, table);
 }
 
-ha_avid::ha_avid(handlerton *hton, TABLE_SHARE *table_arg)
+ha_toybox::ha_toybox(handlerton *hton, TABLE_SHARE *table_arg)
     : handler(hton, table_arg) {}
 
 /*
@@ -231,7 +231,7 @@ ha_avid::ha_avid(handlerton *hton, TABLE_SHARE *table_arg)
 
   This array is optional, so every SE need not implement it.
 */
-static st_handler_tablename ha_avid_system_tables[] = {
+static st_handler_tablename ha_toybox_system_tables[] = {
     {(const char *)nullptr, (const char *)nullptr}};
 
 /**
@@ -245,7 +245,7 @@ static st_handler_tablename ha_avid_system_tables[] = {
   @retval true   Given db.table_name is supported system table.
   @retval false  Given db.table_name is not a supported system table.
 */
-static bool avid_is_supported_system_table(const char *db,
+static bool toybox_is_supported_system_table(const char *db,
                                               const char *table_name,
                                               bool is_sql_layer_system_table) {
   st_handler_tablename *systab;
@@ -254,7 +254,7 @@ static bool avid_is_supported_system_table(const char *db,
   if (is_sql_layer_system_table) return false;
 
   // Check if this is SE layer system tables
-  systab = ha_avid_system_tables;
+  systab = ha_toybox_system_tables;
   while (systab && systab->db) {
     if (systab->db == db && strcmp(systab->tablename, table_name) == 0)
       return true;
@@ -281,7 +281,7 @@ static bool avid_is_supported_system_table(const char *db,
 */
 
 // const char *name is './[db name]/[tbl name]'
-int ha_avid::open(const char *name, int, uint, const dd::Table *) {
+int ha_toybox::open(const char *name, int, uint, const dd::Table *) {
   DBUG_TRACE;
 
   File tableFile;
@@ -322,7 +322,7 @@ int ha_avid::open(const char *name, int, uint, const dd::Table *) {
   sql_base.cc, sql_select.cc and table.cc
 */
 
-int ha_avid::close(void) {
+int ha_toybox::close(void) {
   DBUG_TRACE;
   return TableFileImpl::close(get_share()->tableFile);
 }
@@ -334,7 +334,7 @@ int ha_avid::close(void) {
   information to extract the data from the native byte array type.
 
   @details
-  Avid of this would be:
+  Example of this would be:
   @code
   for (Field **field=table->field ; *field ; field++)
   {
@@ -342,8 +342,8 @@ int ha_avid::close(void) {
   }
   @endcode
 
-  See ha_tina.cc for an avid of extracting all of the data as strings.
-  ha_berekly.cc has an avid of how to store it intact by "packing" it
+  See ha_tina.cc for an toybox of extracting all of the data as strings.
+  ha_berekly.cc has an toybox of how to store it intact by "packing" it
   for ha_berkeley's own native storage type.
 
   See the note for update_row() on auto_increments. This case also applies to
@@ -361,7 +361,7 @@ int ha_avid::close(void) {
   https://dev.mysql.com/doc/dev/mysql-server/latest/PAGE_TEMPTABLE_ROW_FORMAT.html
 */
 
-int ha_avid::write_row(uchar *buf) {
+int ha_toybox::write_row(uchar *buf) {
   DBUG_TRACE;
   insert_to_page(buf);
   /*
@@ -373,7 +373,7 @@ int ha_avid::write_row(uchar *buf) {
   return 0;
 }
 
-void ha_avid::insert_to_page(uchar *record) {
+void ha_toybox::insert_to_page(uchar *record) {
 
   uint64_t tableId = get_share()->tableSpaceHeader->tableSpaceId;
 
@@ -410,7 +410,7 @@ void ha_avid::insert_to_page(uchar *record) {
 
   @details
   Currently new_data will not have an updated auto_increament record. You can
-  do this for avid by doing:
+  do this for toybox by doing:
 
   @code
 
@@ -424,7 +424,7 @@ void ha_avid::insert_to_page(uchar *record) {
   @see
   sql_select.cc, sql_acl.cc, sql_update.cc and sql_insert.cc
 */
-int ha_avid::update_row(const uchar *, uchar *) {
+int ha_toybox::update_row(const uchar *, uchar *) {
   DBUG_TRACE;
   return HA_ERR_WRONG_COMMAND;
 }
@@ -449,7 +449,7 @@ int ha_avid::update_row(const uchar *, uchar *) {
   sql_acl.cc, sql_udf.cc, sql_delete.cc, sql_insert.cc and sql_select.cc
 */
 
-int ha_avid::delete_row(const uchar *) {
+int ha_toybox::delete_row(const uchar *) {
   DBUG_TRACE;
   return HA_ERR_WRONG_COMMAND;
 }
@@ -461,7 +461,7 @@ int ha_avid::delete_row(const uchar *) {
   index.
 */
 
-int ha_avid::index_read_map(uchar *, const uchar *, key_part_map,
+int ha_toybox::index_read_map(uchar *, const uchar *, key_part_map,
                                enum ha_rkey_function) {
   int rc;
   DBUG_TRACE;
@@ -474,7 +474,7 @@ int ha_avid::index_read_map(uchar *, const uchar *, key_part_map,
   Used to read forward through the index.
 */
 
-int ha_avid::index_next(uchar *) {
+int ha_toybox::index_next(uchar *) {
   int rc;
   DBUG_TRACE;
   rc = HA_ERR_WRONG_COMMAND;
@@ -486,7 +486,7 @@ int ha_avid::index_next(uchar *) {
   Used to read backwards through the index.
 */
 
-int ha_avid::index_prev(uchar *) {
+int ha_toybox::index_prev(uchar *) {
   int rc;
   DBUG_TRACE;
   rc = HA_ERR_WRONG_COMMAND;
@@ -503,7 +503,7 @@ int ha_avid::index_prev(uchar *) {
   @see
   opt_range.cc, opt_sum.cc, sql_handler.cc and sql_select.cc
 */
-int ha_avid::index_first(uchar *) {
+int ha_toybox::index_first(uchar *) {
   int rc;
   DBUG_TRACE;
   rc = HA_ERR_WRONG_COMMAND;
@@ -520,7 +520,7 @@ int ha_avid::index_first(uchar *) {
   @see
   opt_range.cc, opt_sum.cc, sql_handler.cc and sql_select.cc
 */
-int ha_avid::index_last(uchar *) {
+int ha_toybox::index_last(uchar *) {
   int rc;
   DBUG_TRACE;
   rc = HA_ERR_WRONG_COMMAND;
@@ -530,7 +530,7 @@ int ha_avid::index_last(uchar *) {
 /**
   @brief
   rnd_init() is called when the system wants the storage engine to do a table
-  scan. See the avid in the introduction at the top of this file to see when
+  scan. See the toybox in the introduction at the top of this file to see when
   rnd_init() is called.
 
   @details
@@ -541,7 +541,7 @@ int ha_avid::index_last(uchar *) {
   filesort.cc, records.cc, sql_handler.cc, sql_select.cc, sql_table.cc and
   sql_update.cc
 */
-int ha_avid::rnd_init(bool) {
+int ha_toybox::rnd_init(bool) {
   DBUG_TRACE;
   table_scan_now_cur = 0;
   page_scan_now_cur = 0;
@@ -549,7 +549,7 @@ int ha_avid::rnd_init(bool) {
   return 0;
 }
 
-int ha_avid::rnd_end() {
+int ha_toybox::rnd_end() {
   DBUG_TRACE;
   return 0;
 }
@@ -569,7 +569,7 @@ int ha_avid::rnd_end() {
   filesort.cc, records.cc, sql_handler.cc, sql_select.cc, sql_table.cc and
   sql_update.cc
 */
-int ha_avid::rnd_next(uchar *buf) {
+int ha_toybox::rnd_next(uchar *buf) {
   DBUG_TRACE;
 
   uint64_t tableId = share->tableSpaceHeader->tableSpaceId;
@@ -638,7 +638,7 @@ int ha_avid::rnd_next(uchar *buf) {
   @see
   filesort.cc, sql_select.cc, sql_delete.cc and sql_update.cc
 */
-void ha_avid::position(const uchar *) { DBUG_TRACE; }
+void ha_toybox::position(const uchar *) { DBUG_TRACE; }
 
 /**
   @brief
@@ -654,7 +654,7 @@ void ha_avid::position(const uchar *) { DBUG_TRACE; }
   @see
   filesort.cc, records.cc, sql_insert.cc, sql_select.cc and sql_update.cc
 */
-int ha_avid::rnd_pos(uchar *, uchar *) {
+int ha_toybox::rnd_pos(uchar *, uchar *) {
   int rc;
   DBUG_TRACE;
   rc = HA_ERR_WRONG_COMMAND;
@@ -699,7 +699,7 @@ int ha_avid::rnd_pos(uchar *, uchar *) {
   sql_select.cc, sql_select.cc, sql_show.cc, sql_show.cc, sql_show.cc,
   sql_show.cc, sql_table.cc, sql_union.cc and sql_update.cc
 */
-int ha_avid::info(uint) {
+int ha_toybox::info(uint) {
   DBUG_TRACE;
   return 0;
 }
@@ -713,7 +713,7 @@ int ha_avid::info(uint) {
     @see
   ha_innodb.cc
 */
-int ha_avid::extra(enum ha_extra_function) {
+int ha_toybox::extra(enum ha_extra_function) {
   DBUG_TRACE;
   return 0;
 }
@@ -738,7 +738,7 @@ int ha_avid::extra(enum ha_extra_function) {
   JOIN::reinit() in sql_select.cc and
   st_query_block_query_expression::exec() in sql_union.cc.
 */
-int ha_avid::delete_all_rows() {
+int ha_toybox::delete_all_rows() {
   DBUG_TRACE;
   return HA_ERR_WRONG_COMMAND;
 }
@@ -760,7 +760,7 @@ int ha_avid::delete_all_rows() {
   the section "locking functions for mysql" in lock.cc;
   copy_data_between_tables() in sql_table.cc.
 */
-int ha_avid::external_lock(THD *, int) {
+int ha_toybox::external_lock(THD *, int) {
   DBUG_TRACE;
   return 0;
 }
@@ -778,7 +778,7 @@ int ha_avid::external_lock(THD *, int) {
   lock (if we don't want to use MySQL table locks at all), or add locks
   for many tables (like we do when we are using a MERGE handler).
 
-  Berkeley DB, for avid, changes all WRITE locks to TL_WRITE_ALLOW_WRITE
+  Berkeley DB, for toybox, changes all WRITE locks to TL_WRITE_ALLOW_WRITE
   (which signals that we are doing WRITES, but are still allowing other
   readers and writers).
 
@@ -802,7 +802,7 @@ int ha_avid::external_lock(THD *, int) {
   @see
   get_lock_data() in lock.cc
 */
-THR_LOCK_DATA **ha_avid::store_lock(THD *, THR_LOCK_DATA **to,
+THR_LOCK_DATA **ha_toybox::store_lock(THD *, THR_LOCK_DATA **to,
                                        enum thr_lock_type lock_type) {
   if (lock_type != TL_IGNORE && lock.type == TL_UNLOCK) lock.type = lock_type;
   *to++ = &lock;
@@ -828,7 +828,7 @@ THR_LOCK_DATA **ha_avid::store_lock(THD *, THR_LOCK_DATA **to,
   @see
   delete_table and ha_create_table() in handler.cc
 */
-int ha_avid::delete_table(const char *from, const dd::Table *) {
+int ha_toybox::delete_table(const char *from, const dd::Table *) {
   // from variable is path to table file.
   // ex) ./[database name]/[table file]
   DBUG_TRACE;
@@ -855,7 +855,7 @@ int ha_avid::delete_table(const char *from, const dd::Table *) {
   @see
   mysql_rename_table() in sql_table.cc
 */
-int ha_avid::rename_table(const char *, const char *, const dd::Table *,
+int ha_toybox::rename_table(const char *, const char *, const dd::Table *,
                              dd::Table *) {
   DBUG_TRACE;
   return HA_ERR_WRONG_COMMAND;
@@ -874,7 +874,7 @@ int ha_avid::rename_table(const char *, const char *, const dd::Table *,
   @see
   check_quick_keys() in opt_range.cc
 */
-ha_rows ha_avid::records_in_range(uint, key_range *, key_range *) {
+ha_rows ha_toybox::records_in_range(uint, key_range *, key_range *) {
   DBUG_TRACE;
   return 10;  // low number to force index usage
 }
@@ -909,10 +909,10 @@ static MYSQL_THDVAR_UINT(create_count_thdvar, 0, nullptr, nullptr, nullptr, 0,
  * @param name ex) './[db name]/[tbl name]' without ext
  * @return
  */
-int ha_avid::create(const char *name, TABLE *form, HA_CREATE_INFO *,
+int ha_toybox::create(const char *name, TABLE *form, HA_CREATE_INFO *,
                        dd::Table *) {
   DBUG_TRACE;
-  mysql_mutex_lock(&avid_system_table_lock);
+  mysql_mutex_lock(&toybox_system_table_lock);
   THD *thd = this->ha_thd();
   // FN_REFLEN is max table path size
   char tableFilePath[FN_REFLEN];
@@ -971,12 +971,12 @@ int ha_avid::create(const char *name, TABLE *form, HA_CREATE_INFO *,
   assert(pageSize == PAGE_SIZE);
 
   int err = TableFileImpl::close(newTableFile);
-  mysql_mutex_unlock(&avid_system_table_lock);
+  mysql_mutex_unlock(&toybox_system_table_lock);
 
   return err;
 }
 
-struct st_mysql_storage_engine avid_storage_engine = {
+struct st_mysql_storage_engine toybox_storage_engine = {
     MYSQL_HANDLERTON_INTERFACE_VERSION};
 
 static ulong srv_enum_var = 0;
@@ -1036,7 +1036,7 @@ static MYSQL_THDVAR_LONGLONG(signed_longlong_thdvar, PLUGIN_VAR_RQCMDARG,
                              "LLONG_MIN..LLONG_MAX", nullptr, nullptr, -10,
                              LLONG_MIN, LLONG_MAX, 0);
 
-static SYS_VAR *avid_system_variables[] = {
+static SYS_VAR *toybox_system_variables[] = {
     MYSQL_SYSVAR(enum_var),
     MYSQL_SYSVAR(ulong_var),
     MYSQL_SYSVAR(double_var),
@@ -1051,8 +1051,8 @@ static SYS_VAR *avid_system_variables[] = {
     MYSQL_SYSVAR(signed_longlong_thdvar),
     nullptr};
 
-// this is an avid of SHOW_FUNC
-static int show_func_avid(MYSQL_THD, SHOW_VAR *var, char *buf) {
+// this is an toybox of SHOW_FUNC
+static int show_func_toybox(MYSQL_THD, SHOW_VAR *var, char *buf) {
   var->type = SHOW_CHAR;
   var->value = buf;  // it's of SHOW_VAR_FUNC_BUFF_SIZE bytes
   snprintf(buf, SHOW_VAR_FUNC_BUFF_SIZE,
@@ -1064,7 +1064,7 @@ static int show_func_avid(MYSQL_THD, SHOW_VAR *var, char *buf) {
   return 0;
 }
 
-struct avid_vars_t {
+struct toybox_vars_t {
   ulong var1;
   double var2;
   char var3[64];
@@ -1073,45 +1073,45 @@ struct avid_vars_t {
   ulong var6;
 };
 
-avid_vars_t avid_vars = {100, 20.01, "three hundred", true, false, 8250};
+toybox_vars_t toybox_vars = {100, 20.01, "three hundred", true, false, 8250};
 
-static SHOW_VAR show_status_avid[] = {
-    {"var1", (char *)&avid_vars.var1, SHOW_LONG, SHOW_SCOPE_GLOBAL},
-    {"var2", (char *)&avid_vars.var2, SHOW_DOUBLE, SHOW_SCOPE_GLOBAL},
+static SHOW_VAR show_status_toybox[] = {
+    {"var1", (char *)&toybox_vars.var1, SHOW_LONG, SHOW_SCOPE_GLOBAL},
+    {"var2", (char *)&toybox_vars.var2, SHOW_DOUBLE, SHOW_SCOPE_GLOBAL},
     {nullptr, nullptr, SHOW_UNDEF,
      SHOW_SCOPE_UNDEF}  // null terminator required
 };
 
-static SHOW_VAR show_array_avid[] = {
-    {"array", (char *)show_status_avid, SHOW_ARRAY, SHOW_SCOPE_GLOBAL},
-    {"var3", (char *)&avid_vars.var3, SHOW_CHAR, SHOW_SCOPE_GLOBAL},
-    {"var4", (char *)&avid_vars.var4, SHOW_BOOL, SHOW_SCOPE_GLOBAL},
+static SHOW_VAR show_array_toybox[] = {
+    {"array", (char *)show_status_toybox, SHOW_ARRAY, SHOW_SCOPE_GLOBAL},
+    {"var3", (char *)&toybox_vars.var3, SHOW_CHAR, SHOW_SCOPE_GLOBAL},
+    {"var4", (char *)&toybox_vars.var4, SHOW_BOOL, SHOW_SCOPE_GLOBAL},
     {nullptr, nullptr, SHOW_UNDEF, SHOW_SCOPE_UNDEF}};
 
 static SHOW_VAR func_status[] = {
-    {"avid_func_avid", (char *)show_func_avid, SHOW_FUNC,
+    {"toybox_func_toybox", (char *)show_func_toybox, SHOW_FUNC,
      SHOW_SCOPE_GLOBAL},
-    {"avid_status_var5", (char *)&avid_vars.var5, SHOW_BOOL,
+    {"toybox_status_var5", (char *)&toybox_vars.var5, SHOW_BOOL,
      SHOW_SCOPE_GLOBAL},
-    {"avid_status_var6", (char *)&avid_vars.var6, SHOW_LONG,
+    {"toybox_status_var6", (char *)&toybox_vars.var6, SHOW_LONG,
      SHOW_SCOPE_GLOBAL},
-    {"avid_status", (char *)show_array_avid, SHOW_ARRAY,
+    {"toybox_status", (char *)show_array_toybox, SHOW_ARRAY,
      SHOW_SCOPE_GLOBAL},
     {nullptr, nullptr, SHOW_UNDEF, SHOW_SCOPE_UNDEF}};
 
-mysql_declare_plugin(avid){
+mysql_declare_plugin(toybox){
     MYSQL_STORAGE_ENGINE_PLUGIN,
-    &avid_storage_engine,
-    "AVID",
+    &toybox_storage_engine,
+    "TOYBOX",
     PLUGIN_AUTHOR_ME,
-    "Avid storage engine",
+    "Toybox storage engine",
     PLUGIN_LICENSE_GPL,
-    avid_init_func, /* Plugin Init */
+    toybox_init_func, /* Plugin Init */
     nullptr,           /* Plugin check uninstall */
-    avid_deinit_func,           /* Plugin Deinit */
+    toybox_deinit_func,           /* Plugin Deinit */
     0x0001 /* 0.1 */,
     func_status,              /* status variables */
-    avid_system_variables, /* system variables */
+    toybox_system_variables, /* system variables */
     nullptr,                  /* config options */
     0,                        /* flags */
 } mysql_declare_plugin_end;

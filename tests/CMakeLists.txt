@@ -4,7 +4,7 @@ INCLUDE_DIRECTORIES(SYSTEM ${GMOCK_INCLUDE_DIRS})
 
 INCLUDE_DIRECTORIES(
         ${CMAKE_SOURCE_DIR}/sql
-        ${CMAKE_SOURCE_DIR}/storage/avid
+        ${CMAKE_SOURCE_DIR}/storage/toybox
 )
 
 SET(TESTS
@@ -12,13 +12,13 @@ SET(TESTS
         bufpool_test.cc
 )
 
-SET(ALL_AVID_TESTS)
+SET(ALL_TOYBOX_TESTS)
 FOREACH (test ${TESTS})
-    LIST(APPEND ALL_AVID_TESTS ${test})
+    LIST(APPEND ALL_TOYBOX_TESTS ${test})
 ENDFOREACH ()
 
-MYSQL_ADD_EXECUTABLE(avid_tests ${ALL_AVID_TESTS}
+MYSQL_ADD_EXECUTABLE(toybox_tests ${ALL_TOYBOX_TESTS}
         ENABLE_EXPORTS
-        ADD_TEST avid_tests
+        ADD_TEST toybox_tests
         LINK_LIBRARIES gunit_large server_unittest_library
 )

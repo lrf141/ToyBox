@@ -1,10 +1,10 @@
 DISABLE_MISSING_PROFILE_WARNING()
 ADD_DEFINITIONS(-DMYSQL_SERVER)
 
-FILE(GLOB avid_handler_src "*.cc" "*.h")
+FILE(GLOB toybox_handler_src "*.cc" "*.h")
 
-SET(AVID_SRC
-        ha_avid.cc ha_avid.h
+SET(TOYBOX_SRC
+        ha_toybox.cc ha_toybox.h
         table_file.cc table_file.h
         file_util.cc file_util.h
         bufpool.cc bufpool.h
@@ -13,7 +13,7 @@ SET(AVID_SRC
         system_table.cc system_table.h
         )
 
-MYSQL_ADD_PLUGIN(avid ${AVID_SRC}
+MYSQL_ADD_PLUGIN(toybox ${TOYBOX_SRC}
   STORAGE_ENGINE MANDATORY
   LINK_LIBRARIES ext::zlib
   )

@@ -1,1 +1,1 @@
-INSTALL PLUGIN avid SONAME 'ha_avid.so';
+INSTALL PLUGIN toybox SONAME 'ha_toybox.so';

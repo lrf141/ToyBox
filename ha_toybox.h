@@ -20,22 +20,22 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA */
 
-/** @file ha_avid.h
+/** @file ha_toybox.h
 
     @brief
-  The ha_avid engine is a stubbed storage engine for avid purposes only;
+  The ha_toybox engine is a stubbed storage engine for toybox purposes only;
   it does nothing at this point. Its purpose is to provide a source
   code illustration of how to begin writing new storage engines; see also
-  /storage/avid/ha_avid.cc.
+  /storage/toybox/ha_toybox.cc.
 
     @note
-  Please read ha_avid.cc before reading this file.
-  Reminder: The avid storage engine implements all methods that are
+  Please read ha_toybox.cc before reading this file.
+  Reminder: The toybox storage engine implements all methods that are
   *required* to be implemented. For a full list of all methods that you can
   implement, see handler.h.
 
    @see
-  /sql/handler.h and /storage/avid/ha_avid.cc
+  /sql/handler.h and /storage/toybox/ha_toybox.cc
 */
 
 #include <sys/types.h>
@@ -54,10 +54,10 @@
 #define PLUGIN_AUTHOR_ME "lrf141"
 
 /** @brief
-  Avid_share is a class that will be shared among all open handlers.
-  This avid implements the minimum of what you will probably need.
+  Toybox_share is a class that will be shared among all open handlers.
+  This toybox implements the minimum of what you will probably need.
 */
-class Avid_share : public Handler_share {
+class Toybox_share : public Handler_share {
  public:
   THR_LOCK lock;
   File tableFile;
@@ -66,8 +66,8 @@ class Avid_share : public Handler_share {
 
   // example: [database name]/[table name].[ext]
   char tableFilePath[FN_REFLEN];
-  Avid_share();
-  ~Avid_share() override {
+  Toybox_share();
+  ~Toybox_share() override {
     thr_lock_delete(&lock);
   }
 };
@@ -75,22 +75,22 @@ class Avid_share : public Handler_share {
 /** @brief
   Class definition for the storage engine
 */
-class ha_avid : public handler {
+class ha_toybox : public handler {
   THR_LOCK_DATA lock;          ///< MySQL lock
-  Avid_share *share;        ///< Shared lock info
-  Avid_share *get_share();  ///< Get the share
+  Toybox_share *share;        ///< Shared lock info
+  Toybox_share *get_share();  ///< Get the share
   uint32_t table_scan_now_cur = 0;
   uint32_t page_scan_now_cur = 0;
   uint32_t page_row_scan_now_cur = 0;
 
  public:
-  ha_avid(handlerton *hton, TABLE_SHARE *table_arg);
-  ~ha_avid() override = default;
+  ha_toybox(handlerton *hton, TABLE_SHARE *table_arg);
+  ~ha_toybox() override = default;
 
   /** @brief
     The name that will be used for display purposes.
    */
-  const char *table_type() const override { return "AVID"; }
+  const char *table_type() const override { return "TOYBOX"; }
 
   /**
     Replace key algorithm with one supported by SE, return the default key
@@ -193,67 +193,67 @@ class ha_avid : public handler {
   }
 
   /*
-    Everything below are methods that we implement in ha_avid.cc.
+    Everything below are methods that we implement in ha_toybox.cc.
 
     Most of these methods are not obligatory, skip them and
     MySQL will treat them as not implemented
   */
   /** @brief
-    We implement this in ha_avid.cc; it's a required method.
+    We implement this in ha_toybox.cc; it's a required method.
   */
   int open(const char *name, int mode, uint test_if_locked,
            const dd::Table *table_def) override;  // required
 
   /** @brief
-    We implement this in ha_avid.cc; it's a required method.
+    We implement this in ha_toybox.cc; it's a required method.
   */
   int close(void) override;  // required
 
   /** @brief
-    We implement this in ha_avid.cc. It's not an obligatory method;
+    We implement this in ha_toybox.cc. It's not an obligatory method;
     skip it and and MySQL will treat it as not implemented.
   */
   int write_row(uchar *buf) override;
 
   /** @brief
-    We implement this in ha_avid.cc. It's not an obligatory method;
+    We implement this in ha_toybox.cc. It's not an obligatory method;
     skip it and and MySQL will treat it as not implemented.
   */
   int update_row(const uchar *old_data, uchar *new_data) override;
 
   /** @brief
-    We implement this in ha_avid.cc. It's not an obligatory method;
+    We implement this in ha_toybox.cc. It's not an obligatory method;
     skip it and and MySQL will treat it as not implemented.
   */
   int delete_row(const uchar *buf) override;
 
   /** @brief
-    We implement this in ha_avid.cc. It's not an obligatory method;
+    We implement this in ha_toybox.cc. It's not an obligatory method;
     skip it and and MySQL will treat it as not implemented.
   */
   int index_read_map(uchar *buf, const uchar *key, key_part_map keypart_map,
                      enum ha_rkey_function find_flag) override;
 
   /** @brief
-    We implement this in ha_avid.cc. It's not an obligatory method;
+    We implement this in ha_toybox.cc. It's not an obligatory method;
     skip it and and MySQL will treat it as not implemented.
   */
   int index_next(uchar *buf) override;
 
   /** @brief
-    We implement this in ha_avid.cc. It's not an obligatory method;
+    We implement this in ha_toybox.cc. It's not an obligatory method;
     skip it and and MySQL will treat it as not implemented.
   */
   int index_prev(uchar *buf) override;
 
   /** @brief
-    We implement this in ha_avid.cc. It's not an obligatory method;
+    We implement this in ha_toybox.cc. It's not an obligatory method;
     skip it and and MySQL will treat it as not implemented.
   */
   int index_first(uchar *buf) override;
 
   /** @brief
-    We implement this in ha_avid.cc. It's not an obligatory method;
+    We implement this in ha_toybox.cc. It's not an obligatory method;
     skip it and and MySQL will treat it as not implemented.
   */
   int index_last(uchar *buf) override;

@@ -1,2 +1,2 @@
-CREATE TABLE t1(id int)Engine=Avid;
+CREATE TABLE t1(id int)Engine=Toybox;
 DROP TABLE t1;

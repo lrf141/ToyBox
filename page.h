@@ -1,5 +1,5 @@
-#ifndef AVID_PAGE_H
-#define AVID_PAGE_H
+#ifndef TOYBOX_PAGE_H
+#define TOYBOX_PAGE_H
 
 #include <stdint.h>
 
@@ -25,4 +25,4 @@ struct Page {
   uint8_t body[PAGE_BODY_SIZE];
 };
 
-#endif  // AVID_PAGE_H
+#endif  // TOYBOX_PAGE_H

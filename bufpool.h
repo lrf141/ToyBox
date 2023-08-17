@@ -1,5 +1,5 @@
-#ifndef AVID_BUFFER_H
-#define AVID_BUFFER_H
+#ifndef TOYBOX_BUFFER_H
+#define TOYBOX_BUFFER_H
 
 #include <stdlib.h>
 

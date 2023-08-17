@@ -1,5 +1,5 @@
-#ifndef AVID_FILE_H
-#define AVID_FILE_H
+#ifndef TOYBOX_FILE_H
+#define TOYBOX_FILE_H
 
 #include <stdint.h>
 #include "my_inttypes.h"
@@ -29,4 +29,4 @@ struct SystemPageHeader {
 
 typedef struct SystemPageHeader SystemPageHeader;
 
-#endif  // AVID_FILE_H
+#endif  // TOYBOX_FILE_H
