@@ -1,4 +1,2 @@
-INSTALL PLUGIN avid SONAME 'ha_avid.so';
 CREATE TABLE t1(id int)Engine=Avid;
 DROP TABLE t1;
-UNINSTALL PLUGIN avid;

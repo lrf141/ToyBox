@@ -27,7 +27,12 @@ mysql-server/storage/avid$ cd ../../build/mysql-test
 mysql-server/build/mysql-test$ ./mtr --suite avid
 ```
 
-### Install/Uninstall Plugin
+### (Optional) Run unit test
+```
+mysql-server/build$ ./runtime_output_directory/avid_tests 
+```
+
+### (Deprecated) Install/Uninstall Plugin
 ```sql
 mysql> INSTALL PLUGIN avid SONAME 'ha_avid.so';
 
