@@ -108,8 +108,9 @@
 #include "table_file.h"
 #include "typelib.h"
 
+#include "system_table.h"
+
 static PSI_file_key key_file_data;
-static PSI_file_key key_file_system;
 static PSI_file_info all_toybox_files[] = {
     {&key_file_data, "data", 0, 0, PSI_DOCUMENT_ME},
     {&key_file_system, "system", 0, 0, PSI_DOCUMENT_ME}
@@ -168,18 +169,12 @@ static int toybox_init_func(void *p) {
 
   mysql_mutex_init(key_mutex_toybox_system, &toybox_system_table_lock, MY_MUTEX_INIT_FAST);
 
-  File fd = SystemTableImpl::open(key_file_system);
+  File fd = SystemTableHelper::open();
   if (fd < 0) {
     // does not exists SystemTableFile
-    SystemTableImpl::close(fd);
-    File systemTableFile = SystemTableImpl::create(key_file_system);
-    SystemTable *systemTable = (SystemTable *)malloc(sizeof(SystemTable));
-    systemTable->maxTableId = 0;
-    SystemTableImpl::write(systemTableFile, (uchar *)systemTable);
-    SystemTableImpl::close(systemTableFile);
+    fd = SystemTableHelper::create(fd);
   }
-  SystemTableImpl::close(fd);
-
+  SystemTableHelper::close(fd);
   return 0;
 }
 
@@ -220,7 +215,8 @@ static handler *toybox_create_handler(handlerton *hton, TABLE_SHARE *table,
 }
 
 ha_toybox::ha_toybox(handlerton *hton, TABLE_SHARE *table_arg)
-    : handler(hton, table_arg) {}
+    : handler(hton, table_arg),
+      systemTableHandler(new SystemTableHandlerImpl()) {}
 
 /*
   List of all system tables specific to the SE.
@@ -920,15 +916,8 @@ int ha_toybox::create(const char *name, TABLE *form, HA_CREATE_INFO *,
 
   FileUtil::convertToTableFilePath(tableFilePath, name, ".json");
 
-  // Open System Table
-  File systemTableFile = SystemTableImpl::open(key_file_system);
-  if (systemTableFile < 0) {
-    return HA_ERR_CRASHED;
-  }
-  SystemTable *systemTable = SystemTableImpl::read(systemTableFile);
-  uint64_t maxTableId = systemTable->maxTableId++;
-  SystemTableImpl::write(systemTableFile, (uchar *)systemTable);
-  SystemTableImpl::close(systemTableFile);
+  // Increment Max PageId
+  uint64_t maxPageId = systemTableHandler->getNewMaxTableId();
 
   // TRUNCATE TABLE
   if (thd_sql_command(thd) == SQLCOM_TRUNCATE) {
@@ -947,7 +936,7 @@ int ha_toybox::create(const char *name, TABLE *form, HA_CREATE_INFO *,
 
   // create table space part
   TableSpaceHeader tableSpaceHeader{};
-  tableSpaceHeader.tableSpaceId = maxTableId;
+  tableSpaceHeader.tableSpaceId = maxPageId;
   tableSpaceHeader.pageCount = 0;
   size_t tableSpaceHeaderSize = TableFileImpl::writeTableSpaceHeader(newTableFile, tableSpaceHeader);
   assert(tableSpaceHeaderSize == TABLE_SPACE_HEADER_SIZE);

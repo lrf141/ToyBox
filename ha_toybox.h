@@ -82,6 +82,7 @@ class ha_toybox : public handler {
   uint32_t table_scan_now_cur = 0;
   uint32_t page_scan_now_cur = 0;
   uint32_t page_row_scan_now_cur = 0;
+  SystemTableHandler *systemTableHandler;
 
  public:
   ha_toybox(handlerton *hton, TABLE_SHARE *table_arg);
