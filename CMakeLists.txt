@@ -24,4 +24,4 @@ MYSQL_ADD_PLUGIN(toybox ${TOYBOX_SRC}
   LINK_LIBRARIES ext::zlib
   )
 
-ADD_SUBDIRECTORY(tests)
+ADD_SUBDIRECTORY(${CMAKE_SOURCE_DIR}/storage/toybox/unittest/)
