@@ -916,8 +916,8 @@ int ha_toybox::create(const char *name, TABLE *form, HA_CREATE_INFO *,
 
   FileUtil::convertToTableFilePath(tableFilePath, name, ".json");
 
-  // Increment Max PageId
-  uint64_t maxPageId = systemTableHandler->getNewMaxTableId();
+  // Increment Max TableId
+  uint64_t maxTableId = systemTableHandler->getNewMaxTableId();
 
   // TRUNCATE TABLE
   if (thd_sql_command(thd) == SQLCOM_TRUNCATE) {
@@ -936,7 +936,7 @@ int ha_toybox::create(const char *name, TABLE *form, HA_CREATE_INFO *,
 
   // create table space part
   TableSpaceHeader tableSpaceHeader{};
-  tableSpaceHeader.tableSpaceId = maxPageId;
+  tableSpaceHeader.tableSpaceId = maxTableId;
   tableSpaceHeader.pageCount = 0;
   size_t tableSpaceHeaderSize = TableFileImpl::writeTableSpaceHeader(newTableFile, tableSpaceHeader);
   assert(tableSpaceHeaderSize == TABLE_SPACE_HEADER_SIZE);
