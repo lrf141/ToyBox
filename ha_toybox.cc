@@ -916,7 +916,7 @@ int ha_toybox::create(const char *name, TABLE *form, HA_CREATE_INFO *,
 
   FileUtil::convertToTableFilePath(tableFilePath, name, ".json");
 
-  // Increment Max TableId
+  // Get and Increment Max TableId
   uint64_t maxTableId = systemTableHandler->getNewMaxTableId();
 
   // TRUNCATE TABLE
