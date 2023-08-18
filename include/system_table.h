@@ -49,11 +49,9 @@ class SystemTableLogicImpl : public SystemTableLogic {
  private:
   SystemTableRepository *repository;
  public:
-  SystemTableLogicImpl() : repository(new SystemTableRepositoryImpl()) {
-  }
-  SystemTableLogicImpl(SystemTableRepository *systemTableRepository) {
-    repository = systemTableRepository;
-  }
+  SystemTableLogicImpl() : repository(new SystemTableRepositoryImpl()) {}
+  // For Test
+  SystemTableLogicImpl(SystemTableRepository *systemTableRepository) : repository(systemTableRepository) {}
   ~SystemTableLogicImpl() override {
     delete repository;
   }
