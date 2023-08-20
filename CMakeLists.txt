@@ -13,6 +13,13 @@ SET(TOYBOX_SRC
         systemtable/system_table_usecase.cc
         systemtable/system_table_handler.cc
         systemtable/system_table_helper.cc
+        tablespace/tablespace_helper.cc
+        tablespace/tablespace_repo.cc
+        tablespace/tablespace_logic.cc
+        tablespace/tablespace_usecase.cc
+        tablespace/tablespace_handler.cc
+        tablespace/tablespace_header_repo.cc
+        tablespace/tablespace_header_logic.cc
         )
 
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/storage/toybox/include/)

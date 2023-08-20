@@ -6,7 +6,7 @@ SystemTable SystemTableLogicImpl::create() {
   return systemTable;
 }
 
-uint64_t SystemTableLogicImpl::updateMaxTableId(SystemTable& systemTable) {
+uint64_t SystemTableLogicImpl::updateMaxTableSpaceId(SystemTable& systemTable) {
   systemTable.maxTableId++;
   File fd = repository->open();
   repository->write(fd, systemTable);

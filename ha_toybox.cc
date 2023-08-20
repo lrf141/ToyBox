@@ -109,8 +109,8 @@
 #include "typelib.h"
 
 #include "system_table.h"
+#include "table_space.h"
 
-static PSI_file_key key_file_data;
 static PSI_file_info all_toybox_files[] = {
     {&key_file_data, "data", 0, 0, PSI_DOCUMENT_ME},
     {&key_file_system, "system", 0, 0, PSI_DOCUMENT_ME}
@@ -216,7 +216,8 @@ static handler *toybox_create_handler(handlerton *hton, TABLE_SHARE *table,
 
 ha_toybox::ha_toybox(handlerton *hton, TABLE_SHARE *table_arg)
     : handler(hton, table_arg),
-      systemTableHandler(new SystemTableHandlerImpl()) {}
+      systemTableHandler(new SystemTableHandlerImpl()),
+      tableSpaceHandler(new TableSpaceHandlerImpl()) {}
 
 /*
   List of all system tables specific to the SE.
@@ -916,8 +917,13 @@ int ha_toybox::create(const char *name, TABLE *form, HA_CREATE_INFO *,
 
   FileUtil::convertToTableFilePath(tableFilePath, name, ".json");
 
-  // Get and Increment Max TableId
-  uint64_t maxTableId = systemTableHandler->getNewMaxTableId();
+  TableSpaceHelper::convertToTableFilePath(tableFilePath, name);
+
+  // Get and Increment Max TableSpaceId
+  uint64_t maxTableSpaceId = systemTableHandler->getNewMaxTableSpaceId();
+
+  bool isTruncateTable = thd_sql_command(thd) == SQLCOM_TRUNCATE;
+  tableSpaceHandler->createTable(maxTableSpaceId, isTruncateTable);
 
   // TRUNCATE TABLE
   if (thd_sql_command(thd) == SQLCOM_TRUNCATE) {
@@ -936,7 +942,7 @@ int ha_toybox::create(const char *name, TABLE *form, HA_CREATE_INFO *,
 
   // create table space part
   TableSpaceHeader tableSpaceHeader{};
-  tableSpaceHeader.tableSpaceId = maxTableId;
+  tableSpaceHeader.tableSpaceId = maxTableSpaceId;
   tableSpaceHeader.pageCount = 0;
   size_t tableSpaceHeaderSize = TableFileImpl::writeTableSpaceHeader(newTableFile, tableSpaceHeader);
   assert(tableSpaceHeaderSize == TABLE_SPACE_HEADER_SIZE);

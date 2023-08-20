@@ -41,7 +41,7 @@ class SystemTableLogic {
   SystemTableLogic() {}
   virtual ~SystemTableLogic() {}
   virtual SystemTable create() = 0;
-  virtual uint64_t updateMaxTableId(SystemTable& systemTable) = 0;
+  virtual uint64_t updateMaxTableSpaceId(SystemTable& systemTable) = 0;
   virtual SystemTable get() = 0;
 };
 
@@ -56,7 +56,7 @@ class SystemTableLogicImpl : public SystemTableLogic {
     delete repository;
   }
   SystemTable create() override;
-  uint64_t updateMaxTableId(SystemTable& systemTable) override;
+  uint64_t updateMaxTableSpaceId(SystemTable& systemTable) override;
   SystemTable get() override;
 };
 
@@ -64,7 +64,7 @@ class SystemTableUseCase {
  public:
   SystemTableUseCase() {}
   virtual ~SystemTableUseCase() {}
-  virtual uint64_t getNewMaxTableId() = 0;
+  virtual uint64_t getNewMaxTableSpaceId() = 0;
 };
 
 class SystemTableUseCaseImpl : public SystemTableUseCase {
@@ -76,12 +76,12 @@ class SystemTableUseCaseImpl : public SystemTableUseCase {
   ~SystemTableUseCaseImpl() {
     delete logic;
   }
-  uint64_t getNewMaxTableId() override;
+  uint64_t getNewMaxTableSpaceId() override;
 };
 
 class SystemTableHandler {
  public:
-  virtual uint64_t getNewMaxTableId() = 0;
+  virtual uint64_t getNewMaxTableSpaceId() = 0;
 };
 
 class SystemTableHandlerImpl : public SystemTableHandler {
@@ -90,7 +90,7 @@ class SystemTableHandlerImpl : public SystemTableHandler {
  public:
   SystemTableHandlerImpl() : useCase(new SystemTableUseCaseImpl) {
   }
-  uint64_t getNewMaxTableId() override;
+  uint64_t getNewMaxTableSpaceId() override;
 };
 
 class SystemTableHelper {

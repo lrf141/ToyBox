@@ -50,6 +50,7 @@
 #include "file.h"
 #include "sql_string.h"
 #include "system_table.h"
+#include "table_space.h"
 
 #define PLUGIN_AUTHOR_ME "lrf141"
 
@@ -83,6 +84,7 @@ class ha_toybox : public handler {
   uint32_t page_scan_now_cur = 0;
   uint32_t page_row_scan_now_cur = 0;
   SystemTableHandler *systemTableHandler;
+  TableSpaceHandler *tableSpaceHandler;
 
  public:
   ha_toybox(handlerton *hton, TABLE_SHARE *table_arg);
