@@ -49,6 +49,7 @@
 #include "bufpool.h"
 #include "file.h"
 #include "sql_string.h"
+#include "system_tablespace.h"
 
 #define PLUGIN_AUTHOR_ME "lrf141"
 
@@ -288,4 +289,6 @@ class ha_toybox : public handler {
       enum thr_lock_type lock_type) override;  ///< required
 
   void insert_to_page(uchar *record);
+
+  table_id getNewMaxTableId();
 };

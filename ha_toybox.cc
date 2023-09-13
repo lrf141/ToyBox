@@ -109,8 +109,6 @@
 #include "table_file.h"
 #include "typelib.h"
 
-#include "system_tablespace.h"
-
 static PSI_file_key key_file_data;
 extern PSI_file_key system_tablespace_key;
 static PSI_file_info all_toybox_files[] = {
@@ -927,10 +925,7 @@ int ha_toybox::create(const char *name, TABLE *form, HA_CREATE_INFO *,
   FileUtil::convertToTableFilePath(tableFilePath, name, ".json");
 
   // Get new max tableId
-  std::unique_ptr<system_table::SystemTablespaceHandler> systemTablespaceDescriptor(
-      new system_table::SystemTablespaceHandler()
-      );
-  table_id maxTableId = systemTablespaceDescriptor->getNewMaxTableId();
+  table_id maxTableId = getNewMaxTableId();
 
   // TRUNCATE TABLE
   if (thd_sql_command(thd) == SQLCOM_TRUNCATE) {
@@ -976,6 +971,13 @@ int ha_toybox::create(const char *name, TABLE *form, HA_CREATE_INFO *,
   mysql_mutex_unlock(&toybox_system_table_lock);
 
   return err;
+}
+
+table_id ha_toybox::getNewMaxTableId() {
+  std::unique_ptr<system_table::SystemTablespaceHandler> systemTablespaceDescriptor(
+      new system_table::SystemTablespaceHandler()
+  );
+  return systemTablespaceDescriptor->getNewMaxTableId();
 }
 
 struct st_mysql_storage_engine toybox_storage_engine = {
