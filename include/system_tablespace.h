@@ -23,12 +23,14 @@ namespace system_table {
 constexpr const int MYF_STRICT_MODE = (MY_FAE | MY_WME);
 constexpr const int MYF_THROUGH_ALL_ERRORS = 0;
 
-struct SystemTablespace {
+class SystemTablespace {
+ private:
   table_id maxTableId;
+ public:
+  SystemTablespace(table_id tableId);
   void incrementMaxTableId();
+  table_id getMaxTableId();
 };
-
-typedef struct SystemTablespace SystemTablespace;
 
 File open(myf flag);
 void close(File fd);

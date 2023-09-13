@@ -13,8 +13,14 @@ PSI_file_key system_tablespace_key;
 
 namespace system_table {
 
+SystemTablespace::SystemTablespace(table_id tableId) : maxTableId(tableId) {}
+
 void SystemTablespace::incrementMaxTableId() {
   maxTableId++;
+}
+
+table_id SystemTablespace::getMaxTableId() {
+  return maxTableId;
 }
 
 File open(myf flag) {
@@ -46,8 +52,7 @@ void init() {
   // if system_tablespace does not exist, create it file in initialize process.
   if (fd < 0) {
     fd = create();
-    std::unique_ptr<SystemTablespace> systemTablespace(new SystemTablespace);
-    systemTablespace->maxTableId = 0;
+    std::unique_ptr<SystemTablespace> systemTablespace(new SystemTablespace(0));
     size_t writeSize = write(fd, reinterpret_cast<uchar *>(systemTablespace.get()));
     assert(writeSize);
   }
@@ -71,7 +76,7 @@ table_id SystemTablespaceHandler::getNewMaxTableId() {
   systemTablespace->incrementMaxTableId();
   size_t writeSize = write(fd, reinterpret_cast<uchar *>(systemTablespace));
   assert(writeSize == SYSTEM_TABLESPACE_SIZE);
-  return systemTablespace->maxTableId;
+  return systemTablespace->getMaxTableId();
 }
 
 } // namespace system_table

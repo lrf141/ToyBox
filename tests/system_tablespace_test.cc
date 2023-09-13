@@ -37,7 +37,7 @@ TEST_F(SystemTablespaceTest, getNewMaxTableId) {
   // Verify
   ASSERT_EQ(result, newTableId);
   ASSERT_EQ(readSize, SYSTEM_TABLESPACE_SIZE);
-  ASSERT_EQ(systemTablespace->maxTableId, newTableId);
+  ASSERT_EQ(systemTablespace->getMaxTableId(), newTableId);
 
   system_table::close(fd);
 }
