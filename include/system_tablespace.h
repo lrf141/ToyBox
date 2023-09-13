@@ -37,9 +37,6 @@ size_t read(File fd, uchar *buf);
 size_t write(File fd, uchar *buf);
 void init();
 
-// For Test
-void remove();
-
 class SystemTablespaceHandler {
  private:
   SystemTablespace *systemTablespace;
