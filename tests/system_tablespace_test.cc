@@ -29,11 +29,14 @@ TEST_F(SystemTablespaceTest, getNewMaxTableId) {
   table_id result = sut->getNewMaxTableId();
   File fd = system_table::open();
   size_t readSize = system_table::read(fd, buf);
-  system_table::SystemTablespace *systemTablespace =
-      reinterpret_cast<system_table::SystemTablespace *>(buf);
+  std::unique_ptr<system_table::SystemTablespace> systemTablespace(
+      reinterpret_cast<system_table::SystemTablespace *>(buf)
+      );
 
   // Verify
   ASSERT_EQ(result, newTableId);
   ASSERT_EQ(readSize, SYSTEM_TABLESPACE_SIZE);
   ASSERT_EQ(systemTablespace->maxTableId, newTableId);
+
+  system_table::close(fd);
 }
