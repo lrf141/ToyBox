@@ -16,13 +16,14 @@
 
 typedef uint64_t table_id;
 
+namespace system_table {
+
 struct SystemTablespace {
   table_id maxTableId;
+  void incrementMaxTableId();
 };
 
 typedef struct SystemTablespace SystemTablespace;
-
-namespace system_table {
 
 File open();
 void close(File fd);

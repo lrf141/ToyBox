@@ -13,6 +13,10 @@ PSI_file_key system_tablespace_key;
 
 namespace system_table {
 
+void SystemTablespace::incrementMaxTableId() {
+  maxTableId++;
+}
+
 File open() {
   return FileUtil::open(
       system_tablespace_key, SYSTEM_TABLESPACE_PATH, O_RDWR, MYF(0));
@@ -65,7 +69,7 @@ SystemTablespaceDescriptor::~SystemTablespaceDescriptor() {
 }
 
 table_id SystemTablespaceDescriptor::getNewMaxTableId() {
-  systemTablespace->maxTableId++;
+  systemTablespace->incrementMaxTableId();
   size_t writeSize = write(fd, reinterpret_cast<uchar *>(systemTablespace));
   assert(writeSize == SYSTEM_TABLESPACE_SIZE);
   return systemTablespace->maxTableId;
