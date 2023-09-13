@@ -169,19 +169,6 @@ static int toybox_init_func(void *p) {
 
   mysql_mutex_init(key_mutex_toybox_system, &toybox_system_table_lock, MY_MUTEX_INIT_FAST);
 
-
-  /*
-  File fd = system_table::open();
-  if (fd < 0) {
-    // does not exists SystemTableFile
-    system_table::close(fd);
-    File systemTableFile = system_table::create();
-    SystemTable *systemTable = (SystemTable *)malloc(sizeof(SystemTable));
-    systemTable->maxTableId = 0;
-    SystemTableImpl::write(systemTableFile, (uchar *)systemTable);
-    SystemTableImpl::close(systemTableFile);
-  }
-  SystemTableImpl::close(fd);*/
   system_table::init();
 
   return 0;
