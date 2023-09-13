@@ -2,6 +2,7 @@
 // Created by lrf141 on 9/13/23.
 //
 #include <gtest/gtest.h>
+#include <iostream>
 #include "system_tablespace.h"
 
 class SystemTablespaceTest : public testing::Test {
@@ -16,7 +17,7 @@ class SystemTablespaceTest : public testing::Test {
   void TearDown() override {
     delete sut;
     sut = nullptr;
-    system_table::remove();
+    std::remove(SYSTEM_TABLESPACE_PATH);
   }
 };
 
@@ -27,7 +28,7 @@ TEST_F(SystemTablespaceTest, getNewMaxTableId) {
 
   // Exercise
   table_id result = sut->getNewMaxTableId();
-  File fd = system_table::open();
+  File fd = system_table::open(system_table::MYF_STRICT_MODE);
   size_t readSize = system_table::read(fd, buf);
   std::unique_ptr<system_table::SystemTablespace> systemTablespace(
       reinterpret_cast<system_table::SystemTablespace *>(buf)

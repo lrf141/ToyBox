@@ -5,6 +5,7 @@
 #include <cinttypes>
 
 #include "my_inttypes.h"
+#include "my_sys.h"
 #include "mysql/components/services/bits/my_io_bits.h"
 #include "mysql/components/services/bits/psi_file_bits.h"
 
@@ -18,6 +19,10 @@ typedef uint64_t table_id;
 
 namespace system_table {
 
+// Error handling flag. See "my_sys.h".
+constexpr const int MYF_STRICT_MODE = (MY_FAE | MY_WME);
+constexpr const int MYF_THROUGH_ALL_ERRORS = 0;
+
 struct SystemTablespace {
   table_id maxTableId;
   void incrementMaxTableId();
@@ -25,7 +30,7 @@ struct SystemTablespace {
 
 typedef struct SystemTablespace SystemTablespace;
 
-File open();
+File open(myf flag);
 void close(File fd);
 File create();
 size_t read(File fd, uchar *buf);
