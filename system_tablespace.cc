@@ -55,7 +55,7 @@ void init() {
   close(fd);
 }
 
-SystemTablespaceDescriptor::SystemTablespaceDescriptor() {
+SystemTablespaceHandler::SystemTablespaceHandler() {
   fd = open();
   uchar *buf = static_cast<uchar *>(calloc(SYSTEM_TABLESPACE_SIZE, sizeof(uchar)));
   size_t readSize = read(fd, buf);
@@ -63,12 +63,12 @@ SystemTablespaceDescriptor::SystemTablespaceDescriptor() {
   systemTablespace = reinterpret_cast<SystemTablespace *>(buf);
 }
 
-SystemTablespaceDescriptor::~SystemTablespaceDescriptor() {
+SystemTablespaceHandler::~SystemTablespaceHandler() {
   delete systemTablespace;
   close(fd);
 }
 
-table_id SystemTablespaceDescriptor::getNewMaxTableId() {
+table_id SystemTablespaceHandler::getNewMaxTableId() {
   systemTablespace->incrementMaxTableId();
   size_t writeSize = write(fd, reinterpret_cast<uchar *>(systemTablespace));
   assert(writeSize == SYSTEM_TABLESPACE_SIZE);

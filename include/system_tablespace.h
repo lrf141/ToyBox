@@ -32,13 +32,13 @@ size_t read(File fd);
 size_t write(File fd, uchar *buf);
 void init();
 
-class SystemTablespaceDescriptor {
+class SystemTablespaceHandler {
  private:
   SystemTablespace *systemTablespace;
   File fd;
  public:
-  SystemTablespaceDescriptor();
-  ~SystemTablespaceDescriptor();
+  SystemTablespaceHandler();
+  ~SystemTablespaceHandler();
   table_id getNewMaxTableId();
 };
 }

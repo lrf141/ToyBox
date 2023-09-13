@@ -927,8 +927,8 @@ int ha_toybox::create(const char *name, TABLE *form, HA_CREATE_INFO *,
   FileUtil::convertToTableFilePath(tableFilePath, name, ".json");
 
   // Get new max tableId
-  std::unique_ptr<system_table::SystemTablespaceDescriptor> systemTablespaceDescriptor(
-      new system_table::SystemTablespaceDescriptor()
+  std::unique_ptr<system_table::SystemTablespaceHandler> systemTablespaceDescriptor(
+      new system_table::SystemTablespaceHandler()
       );
   table_id maxTableId = systemTablespaceDescriptor->getNewMaxTableId();
 
