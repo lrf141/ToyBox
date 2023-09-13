@@ -95,6 +95,7 @@
 #include <mysql/psi/mysql_file.h>
 #include <algorithm>
 #include <iostream>
+#include <memory>
 
 #include "storage/toybox/ha_toybox.h"
 #include "toybox_errorno.h"
@@ -108,11 +109,13 @@
 #include "table_file.h"
 #include "typelib.h"
 
+#include "system_tablespace.h"
+
 static PSI_file_key key_file_data;
-static PSI_file_key key_file_system;
+extern PSI_file_key system_tablespace_key;
 static PSI_file_info all_toybox_files[] = {
     {&key_file_data, "data", 0, 0, PSI_DOCUMENT_ME},
-    {&key_file_system, "system", 0, 0, PSI_DOCUMENT_ME}
+    {&system_tablespace_key, "system", 0, 0, PSI_DOCUMENT_ME}
 };
 
 static PSI_memory_key buffer_pool_key;
@@ -168,17 +171,20 @@ static int toybox_init_func(void *p) {
 
   mysql_mutex_init(key_mutex_toybox_system, &toybox_system_table_lock, MY_MUTEX_INIT_FAST);
 
-  File fd = SystemTableImpl::open(key_file_system);
+
+  /*
+  File fd = system_table::open();
   if (fd < 0) {
     // does not exists SystemTableFile
-    SystemTableImpl::close(fd);
-    File systemTableFile = SystemTableImpl::create(key_file_system);
+    system_table::close(fd);
+    File systemTableFile = system_table::create();
     SystemTable *systemTable = (SystemTable *)malloc(sizeof(SystemTable));
     systemTable->maxTableId = 0;
     SystemTableImpl::write(systemTableFile, (uchar *)systemTable);
     SystemTableImpl::close(systemTableFile);
   }
-  SystemTableImpl::close(fd);
+  SystemTableImpl::close(fd);*/
+  system_table::init();
 
   return 0;
 }
@@ -920,15 +926,11 @@ int ha_toybox::create(const char *name, TABLE *form, HA_CREATE_INFO *,
 
   FileUtil::convertToTableFilePath(tableFilePath, name, ".json");
 
-  // Open System Table
-  File systemTableFile = SystemTableImpl::open(key_file_system);
-  if (systemTableFile < 0) {
-    return HA_ERR_CRASHED;
-  }
-  SystemTable *systemTable = SystemTableImpl::read(systemTableFile);
-  uint64_t maxTableId = systemTable->maxTableId++;
-  SystemTableImpl::write(systemTableFile, (uchar *)systemTable);
-  SystemTableImpl::close(systemTableFile);
+  // Get new max tableId
+  std::unique_ptr<system_table::SystemTablespaceDescriptor> systemTablespaceDescriptor(
+      new system_table::SystemTablespaceDescriptor()
+      );
+  table_id maxTableId = systemTablespaceDescriptor->getNewMaxTableId();
 
   // TRUNCATE TABLE
   if (thd_sql_command(thd) == SQLCOM_TRUNCATE) {

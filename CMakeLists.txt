@@ -1,8 +1,6 @@
 DISABLE_MISSING_PROFILE_WARNING()
 ADD_DEFINITIONS(-DMYSQL_SERVER)
 
-FILE(GLOB toybox_handler_src "*.cc" "*.h")
-
 SET(TOYBOX_SRC
         ha_toybox.cc ha_toybox.h
         table_file.cc table_file.h
@@ -11,7 +9,10 @@ SET(TOYBOX_SRC
         page.cc page.h
         file.cc file.h
         system_table.cc system_table.h
+        system_tablespace.cc
         )
+
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/storage/toybox/include/)
 
 MYSQL_ADD_PLUGIN(toybox ${TOYBOX_SRC}
   STORAGE_ENGINE MANDATORY
