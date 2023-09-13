@@ -10,6 +10,7 @@ INCLUDE_DIRECTORIES(
 SET(TESTS
         sample_test.cc
         bufpool_test.cc
+        system_tablespace_test.cc
 )
 
 SET(ALL_TOYBOX_TESTS)

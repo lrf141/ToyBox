@@ -55,6 +55,10 @@ void init() {
   close(fd);
 }
 
+void remove() {
+  FileUtil::remove(system_tablespace_key, SYSTEM_TABLESPACE_PATH, MYF(0));
+}
+
 SystemTablespaceHandler::SystemTablespaceHandler() {
   fd = open();
   uchar *buf = static_cast<uchar *>(calloc(SYSTEM_TABLESPACE_SIZE, sizeof(uchar)));

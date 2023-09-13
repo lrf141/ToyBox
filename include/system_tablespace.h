@@ -28,9 +28,12 @@ typedef struct SystemTablespace SystemTablespace;
 File open();
 void close(File fd);
 File create();
-size_t read(File fd);
+size_t read(File fd, uchar *buf);
 size_t write(File fd, uchar *buf);
 void init();
+
+// For Test
+void remove();
 
 class SystemTablespaceHandler {
  private:
