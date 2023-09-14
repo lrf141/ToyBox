@@ -64,10 +64,9 @@ void init() {
 
 SystemTablespaceHandler::SystemTablespaceHandler() {
   file = file_handler::File(SYSTEM_TABLESPACE_PATH, MYF_STRICT_MODE, system_tablespace_key);
-  SystemTablespace *temp = new SystemTablespace;
-  size_t readSize = file.read(temp->toBinary(), SYSTEM_TABLESPACE_SIZE);
+  systemTablespace = new SystemTablespace;
+  size_t readSize = file.read(systemTablespace->toBinary(), SYSTEM_TABLESPACE_SIZE);
   assert(readSize == SYSTEM_TABLESPACE_SIZE);
-  systemTablespace = temp;
 }
 
 table_id SystemTablespaceHandler::getNewMaxTableId() {
