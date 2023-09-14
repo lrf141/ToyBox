@@ -52,7 +52,9 @@ void init() {
   // if system_tablespace does not exist, create it file in initialize process.
   if (fd < 0) {
     fd = create();
-    std::unique_ptr<SystemTablespace> systemTablespace(new SystemTablespace(0));
+    std::unique_ptr<SystemTablespace> systemTablespace(
+        new SystemTablespace(MAX_TABLE_ID_INITIAL_VALUE)
+        );
     size_t writeSize = write(fd, reinterpret_cast<uchar *>(systemTablespace.get()));
     assert(writeSize);
   }

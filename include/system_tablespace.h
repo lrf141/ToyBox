@@ -1,7 +1,6 @@
 //
 // Created by lrf141 on 9/12/23.
 //
-
 #include <cinttypes>
 
 #include "my_inttypes.h"
@@ -22,6 +21,7 @@ namespace system_table {
 // Error handling flag. See "my_sys.h".
 constexpr const int MYF_STRICT_MODE = (MY_FAE | MY_WME);
 constexpr const int MYF_THROUGH_ALL_ERRORS = 0;
+constexpr const int MAX_TABLE_ID_INITIAL_VALUE = 0;
 
 class SystemTablespace {
  private:
