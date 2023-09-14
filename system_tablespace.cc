@@ -23,6 +23,10 @@ table_id SystemTablespace::getMaxTableId() {
   return maxTableId;
 }
 
+uchar *SystemTablespace::toBinary() {
+  return reinterpret_cast<uchar *>(this);
+}
+
 File open(myf flag) {
   return FileUtil::open(
       system_tablespace_key, SYSTEM_TABLESPACE_PATH, O_RDWR, MYF(flag));
@@ -62,21 +66,16 @@ void init() {
 }
 
 SystemTablespaceHandler::SystemTablespaceHandler() {
-  fd = open(MYF_STRICT_MODE);
+  file = file_handler::File(SYSTEM_TABLESPACE_PATH, MYF_STRICT_MODE);
   uchar *buf = static_cast<uchar *>(calloc(SYSTEM_TABLESPACE_SIZE, sizeof(uchar)));
-  size_t readSize = read(fd, buf);
+  size_t readSize = file.read(buf, SYSTEM_TABLESPACE_SIZE);
   assert(readSize == SYSTEM_TABLESPACE_SIZE);
   systemTablespace = reinterpret_cast<SystemTablespace *>(buf);
 }
 
-SystemTablespaceHandler::~SystemTablespaceHandler() {
-  delete systemTablespace;
-  close(fd);
-}
-
 table_id SystemTablespaceHandler::getNewMaxTableId() {
   systemTablespace->incrementMaxTableId();
-  size_t writeSize = write(fd, reinterpret_cast<uchar *>(systemTablespace));
+  size_t writeSize = file.write(reinterpret_cast<uchar *>(systemTablespace), SYSTEM_TABLESPACE_SIZE);
   assert(writeSize == SYSTEM_TABLESPACE_SIZE);
   return systemTablespace->getMaxTableId();
 }

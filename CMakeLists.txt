@@ -9,6 +9,7 @@ SET(TOYBOX_SRC
         page.cc page.h
         file.cc file.h
         system_tablespace.cc
+        file_handler.cc
         )
 
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/storage/toybox/include/)

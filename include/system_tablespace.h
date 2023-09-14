@@ -8,6 +8,8 @@
 #include "mysql/components/services/bits/my_io_bits.h"
 #include "mysql/components/services/bits/psi_file_bits.h"
 
+#include "file_handler.h"
+
 #ifndef TOYBOX_SYSTEM_TABLESPACE_H
 #define TOYBOX_SYSTEM_TABLESPACE_H
 
@@ -30,6 +32,7 @@ class SystemTablespace {
   SystemTablespace(table_id tableId);
   void incrementMaxTableId();
   table_id getMaxTableId();
+  uchar *toBinary();
 };
 
 File open(myf flag);
@@ -41,11 +44,11 @@ void init();
 
 class SystemTablespaceHandler {
  private:
+  file_handler::File file;
   SystemTablespace *systemTablespace;
-  File fd;
  public:
   SystemTablespaceHandler();
-  ~SystemTablespaceHandler();
+  ~SystemTablespaceHandler() {}
   table_id getNewMaxTableId();
 };
 }
