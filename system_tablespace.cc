@@ -4,7 +4,6 @@
 #include "system_tablespace.h"
 #include <fcntl.h>
 #include <cassert>
-#include <cstdlib>
 #include <memory>
 
 #include "file_util.h"
@@ -12,8 +11,6 @@
 PSI_file_key system_tablespace_key;
 
 namespace system_table {
-
-SystemTablespace::SystemTablespace(table_id tableId) : maxTableId(tableId) {}
 
 void SystemTablespace::incrementMaxTableId() {
   maxTableId++;
@@ -67,10 +64,10 @@ void init() {
 
 SystemTablespaceHandler::SystemTablespaceHandler() {
   file = file_handler::File(SYSTEM_TABLESPACE_PATH, MYF_STRICT_MODE);
-  uchar *buf = static_cast<uchar *>(calloc(SYSTEM_TABLESPACE_SIZE, sizeof(uchar)));
-  size_t readSize = file.read(buf, SYSTEM_TABLESPACE_SIZE);
+  SystemTablespace *temp = new SystemTablespace;
+  size_t readSize = file.read(temp->toBinary(), SYSTEM_TABLESPACE_SIZE);
   assert(readSize == SYSTEM_TABLESPACE_SIZE);
-  systemTablespace = reinterpret_cast<SystemTablespace *>(buf);
+  systemTablespace = temp;
 }
 
 table_id SystemTablespaceHandler::getNewMaxTableId() {

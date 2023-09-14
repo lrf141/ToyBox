@@ -29,7 +29,8 @@ class SystemTablespace {
  private:
   table_id maxTableId;
  public:
-  SystemTablespace(table_id tableId);
+  SystemTablespace() : maxTableId(0) {}
+  SystemTablespace(table_id tableId) : maxTableId(tableId) {}
   void incrementMaxTableId();
   table_id getMaxTableId();
   uchar *toBinary();
@@ -48,7 +49,9 @@ class SystemTablespaceHandler {
   SystemTablespace *systemTablespace;
  public:
   SystemTablespaceHandler();
-  ~SystemTablespaceHandler() {}
+  ~SystemTablespaceHandler() {
+    delete systemTablespace;
+  }
   table_id getNewMaxTableId();
 };
 }
