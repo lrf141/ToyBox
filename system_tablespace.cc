@@ -75,7 +75,7 @@ SystemTablespaceHandler::SystemTablespaceHandler() {
 
 table_id SystemTablespaceHandler::getNewMaxTableId() {
   systemTablespace->incrementMaxTableId();
-  size_t writeSize = file.write(reinterpret_cast<uchar *>(systemTablespace), SYSTEM_TABLESPACE_SIZE);
+  size_t writeSize = file.write(systemTablespace->toBinary(), SYSTEM_TABLESPACE_SIZE);
   assert(writeSize == SYSTEM_TABLESPACE_SIZE);
   return systemTablespace->getMaxTableId();
 }
