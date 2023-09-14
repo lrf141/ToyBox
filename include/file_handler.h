@@ -22,8 +22,8 @@ class File {
       : fileDescriptor(fd),
         myFlags(flags),
         fileKey(key) {}
-  File(const char *path, myf flags)
-      : myFlags(flags) {
+  File(const char *path, myf flags, PSI_file_key key)
+      : myFlags(flags), fileKey(key) {
     open(path);
   }
   ~File() {
