@@ -961,10 +961,8 @@ int ha_toybox::create(const char *name, TABLE *form, HA_CREATE_INFO *,
 }
 
 table_id ha_toybox::getNewMaxTableId() {
-  std::unique_ptr<system_table::SystemTablespaceHandler> systemTablespaceDescriptor(
-      new system_table::SystemTablespaceHandler()
-  );
-  return systemTablespaceDescriptor->getNewMaxTableId();
+  system_table::SystemTablespaceHandler systemTablespaceHandler;
+  return systemTablespaceHandler.getNewMaxTableId();
 }
 
 struct st_mysql_storage_engine toybox_storage_engine = {
