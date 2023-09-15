@@ -30,7 +30,7 @@ class SystemTablespace {
   table_id maxTableId;
  public:
   SystemTablespace() : maxTableId(0) {}
-  SystemTablespace(table_id tableId) : maxTableId(tableId) {}
+  explicit SystemTablespace(table_id tableId) : maxTableId(tableId) {}
   void incrementMaxTableId();
   table_id getMaxTableId();
   uchar *toBinary();
