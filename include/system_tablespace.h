@@ -13,12 +13,12 @@
 #ifndef TOYBOX_SYSTEM_TABLESPACE_H
 #define TOYBOX_SYSTEM_TABLESPACE_H
 
-#define SYSTEM_TABLESPACE_PATH "./toyboxsys"
-#define SYSTEM_TABLESPACE_SIZE 8 // byte
-
 typedef uint64_t table_id;
 
 namespace system_table {
+
+constexpr const char *SYSTEM_TABLESPACE_PATH = "./toyboxsys";
+constexpr const int SYSTEM_TABLESPACE_SIZE = 8;
 
 // Error handling flag. See "my_sys.h".
 constexpr const int MYF_STRICT_MODE = (MY_FAE | MY_WME);

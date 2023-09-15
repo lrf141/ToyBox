@@ -17,7 +17,7 @@ class SystemTablespaceTest : public testing::Test {
   void TearDown() override {
     delete sut;
     sut = nullptr;
-    std::remove(SYSTEM_TABLESPACE_PATH);
+    std::remove(system_table::SYSTEM_TABLESPACE_PATH);
   }
 };
 
@@ -28,12 +28,13 @@ TEST_F(SystemTablespaceTest, getNewMaxTableId) {
   // Exercise
   table_id result = sut->getNewMaxTableId();
   file_handler::File file;
-  file.open(SYSTEM_TABLESPACE_PATH);
+  file.open(system_table::SYSTEM_TABLESPACE_PATH);
   system_table::SystemTablespace systemTablespace(0);
-  size_t readSize = file.read(systemTablespace.toBinary(), SYSTEM_TABLESPACE_SIZE);
+  size_t readSize = file.read(systemTablespace.toBinary(),
+                              system_table::SYSTEM_TABLESPACE_SIZE);
 
   // Verify
   ASSERT_EQ(result, newTableId);
-  ASSERT_EQ(readSize, SYSTEM_TABLESPACE_SIZE);
+  ASSERT_EQ(readSize, system_table::SYSTEM_TABLESPACE_SIZE);
   ASSERT_EQ(systemTablespace.getMaxTableId(), newTableId);
 }
