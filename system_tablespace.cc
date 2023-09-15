@@ -21,9 +21,9 @@ uchar *SystemTablespace::toBinary() {
   return reinterpret_cast<uchar *>(this);
 }
 
-SystemTablespaceHandler::SystemTablespaceHandler() {
+SystemTablespaceHandler::SystemTablespaceHandler()
+    : systemTablespace(new SystemTablespace) {
   file = file_handler::File(SYSTEM_TABLESPACE_PATH, MYF_STRICT_MODE, system_tablespace_key);
-  systemTablespace = new SystemTablespace;
   size_t readSize = file.read(systemTablespace->toBinary(), SYSTEM_TABLESPACE_SIZE);
   assert(readSize == SYSTEM_TABLESPACE_SIZE);
 }
