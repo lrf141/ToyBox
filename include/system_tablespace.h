@@ -32,16 +32,9 @@ class SystemTablespace {
   SystemTablespace() : maxTableId(0) {}
   explicit SystemTablespace(table_id tableId) : maxTableId(tableId) {}
   void incrementMaxTableId();
-  table_id getMaxTableId();
+  table_id getMaxTableId() const;
   uchar *toBinary();
 };
-
-File open(myf flag);
-void close(File fd);
-File create();
-size_t read(File fd, uchar *buf);
-size_t write(File fd, uchar *buf);
-void init();
 
 class SystemTablespaceHandler {
  private:
@@ -53,6 +46,7 @@ class SystemTablespaceHandler {
     delete systemTablespace;
   }
   table_id getNewMaxTableId();
+  static void create();
 };
 }
 

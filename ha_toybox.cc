@@ -169,7 +169,7 @@ static int toybox_init_func(void *p) {
 
   mysql_mutex_init(key_mutex_toybox_system, &toybox_system_table_lock, MY_MUTEX_INIT_FAST);
 
-  system_table::init();
+  system_table::SystemTablespaceHandler::create();
 
   return 0;
 }

@@ -10,7 +10,7 @@ class SystemTablespaceTest : public testing::Test {
   system_table::SystemTablespaceHandler *sut;
 
   void SetUp() override {
-    system_table::init();
+    system_table::SystemTablespaceHandler::create();
     sut = new system_table::SystemTablespaceHandler;
   }
 
@@ -24,20 +24,16 @@ class SystemTablespaceTest : public testing::Test {
 TEST_F(SystemTablespaceTest, getNewMaxTableId) {
   // Setup
   table_id newTableId = 1;
-  uchar *buf = static_cast<uchar *>(calloc(SYSTEM_TABLESPACE_SIZE, sizeof(uchar)));
 
   // Exercise
   table_id result = sut->getNewMaxTableId();
-  File fd = system_table::open(system_table::MYF_STRICT_MODE);
-  size_t readSize = system_table::read(fd, buf);
-  std::unique_ptr<system_table::SystemTablespace> systemTablespace(
-      reinterpret_cast<system_table::SystemTablespace *>(buf)
-      );
+  file_handler::File file;
+  file.open(SYSTEM_TABLESPACE_PATH);
+  system_table::SystemTablespace systemTablespace(0);
+  size_t readSize = file.read(systemTablespace.toBinary(), SYSTEM_TABLESPACE_SIZE);
 
   // Verify
   ASSERT_EQ(result, newTableId);
   ASSERT_EQ(readSize, SYSTEM_TABLESPACE_SIZE);
-  ASSERT_EQ(systemTablespace->getMaxTableId(), newTableId);
-
-  system_table::close(fd);
+  ASSERT_EQ(systemTablespace.getMaxTableId(), newTableId);
 }
