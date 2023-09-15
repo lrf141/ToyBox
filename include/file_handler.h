@@ -26,6 +26,30 @@ class File {
       : myFlags(flags), fileKey(key) {
     open(path);
   }
+  File(File&& tmp) noexcept
+      : fileDescriptor(tmp.fileDescriptor),
+        myFlags(tmp.myFlags),
+        fileKey(tmp.fileKey) {}
+  File& operator=(File&& tmp) noexcept {
+    if (this != &tmp) {
+      fileDescriptor = tmp.fileDescriptor;
+      myFlags = tmp.myFlags;
+      fileKey = tmp.fileKey;
+    }
+    return *this;
+  }
+  File(const File& tmp) noexcept
+      : fileDescriptor(tmp.fileDescriptor),
+        myFlags(tmp.myFlags),
+        fileKey(tmp.fileKey) {}
+  File& operator=(const File& tmp) noexcept {
+    if (this != &tmp) {
+      fileDescriptor = tmp.fileDescriptor;
+      myFlags = tmp.myFlags;
+      fileKey = tmp.fileKey;
+    }
+    return *this;
+  }
   ~File() {
     if (fileDescriptor <= 0) {
       close();
@@ -36,7 +60,7 @@ class File {
   void close() const;
   size_t read(uchar *buf, int size) const;
   size_t write(uchar *buf, int size) const;
-  FileDescriptor getFileDescriptor() {
+  FileDescriptor getFileDescriptor() const {
     return fileDescriptor;
   }
 };
