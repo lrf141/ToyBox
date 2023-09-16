@@ -39,12 +39,10 @@ class SystemTablespace {
 class SystemTablespaceHandler {
  private:
   file_handler::File file;
-  SystemTablespace *systemTablespace;
+  SystemTablespace systemTablespace;
  public:
   SystemTablespaceHandler();
-  ~SystemTablespaceHandler() {
-    delete systemTablespace;
-  }
+  ~SystemTablespaceHandler() {}
   table_id getNewMaxTableId();
   static void create();
 };

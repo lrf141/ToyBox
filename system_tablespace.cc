@@ -22,17 +22,17 @@ uchar *SystemTablespace::toBinary() {
 }
 
 SystemTablespaceHandler::SystemTablespaceHandler()
-    : systemTablespace(new SystemTablespace) {
+    : systemTablespace(SystemTablespace()) {
   file = file_handler::File(SYSTEM_TABLESPACE_PATH, MYF_STRICT_MODE, system_tablespace_key);
-  size_t readSize = file.read(systemTablespace->toBinary(), SYSTEM_TABLESPACE_SIZE);
+  size_t readSize = file.read(systemTablespace.toBinary(), SYSTEM_TABLESPACE_SIZE);
   assert(readSize == SYSTEM_TABLESPACE_SIZE);
 }
 
 table_id SystemTablespaceHandler::getNewMaxTableId() {
-  systemTablespace->incrementMaxTableId();
-  size_t writeSize = file.write(systemTablespace->toBinary(), SYSTEM_TABLESPACE_SIZE);
+  systemTablespace.incrementMaxTableId();
+  size_t writeSize = file.write(systemTablespace.toBinary(), SYSTEM_TABLESPACE_SIZE);
   assert(writeSize == SYSTEM_TABLESPACE_SIZE);
-  return systemTablespace->getMaxTableId();
+  return systemTablespace.getMaxTableId();
 }
 
 void SystemTablespaceHandler::create() {
