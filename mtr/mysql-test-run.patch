@@ -1,2 +1,72 @@
-232a233
->   toybox
+--- mysql-server/mysql-test/mysql-test-run.pl	2023-09-23 00:00:52.464766188 +0900
++++ mysql-test-run.pl	2023-09-22 23:30:19.189316725 +0900
+@@ -1,4 +1,5 @@
+ #!/usr/bin/perl
++# patch true
+ # -*- cperl -*-
+
+ # Copyright (c) 2004, 2023, Oracle and/or its affiliates.
+@@ -206,6 +207,8 @@
+ our $opt_force;
+ our $opt_gcov;
+ our $opt_gdb;
++our $opt_rr;
++my @rr_record_args;
+ our $opt_gdb_secondary_engine;
+ our $opt_gprof;
+ our $opt_lldb;
+@@ -230,6 +233,7 @@
+ # Suites run by default (i.e. when invoking ./mtr without parameters)
+ #
+ our @DEFAULT_SUITES = qw(
++  toybox
+   auth_sec
+   binlog
+   binlog_gtid
+@@ -1700,6 +1704,7 @@
+     'debugger=s'           => \$opt_debugger,
+     'gdb'                  => \$opt_gdb,
+     'gdb-secondary-engine' => \$opt_gdb_secondary_engine,
++    'rr'                   => \$opt_rr,
+     'lldb'                 => \$opt_lldb,
+     'manual-boot-gdb'      => \$opt_manual_boot_gdb,
+     'manual-dbx'           => \$opt_manual_dbx,
+@@ -2108,6 +2113,7 @@
+
+   # Check debug related options
+   if ($opt_gdb ||
++      $opt_rr  ||
+       $opt_gdb_secondary_engine ||
+       $opt_client_gdb           ||
+       $opt_ddd                  ||
+@@ -2135,6 +2141,17 @@
+     $opt_shutdown_timeout = 24 * 60;         # One day to shutdown
+     $opt_shutdown_timeout = 24 * 60;
+     $opt_start_timeout    = 24 * 60 * 60;    # One day for PID file creation
++    if ($opt_rr)
++    {
++      open(my $fh, '<', '/proc/sys/kernel/perf_event_paranoid');
++      my $perf_event_paranoid= <$fh>;
++      close $fh;
++      chomp $perf_event_paranoid;
++      if ($perf_event_paranoid != 1)
++      {
++        mtr_error("rr requires kernel.perf_event_paranoid set to 1, but it is $perf_event_paranoid");
++      }
++    }
+   }
+
+   # Modified behavior with --start options
+@@ -6453,6 +6470,12 @@
+   } elsif ($tinfo->{'secondary-engine'}) {
+     # Wait for the PID file to be created if secondary engine
+     # is enabled.
++  } elsif ($opt_rr) {
++      $args= ["record", @rr_record_args, "$exe", @$args];
++      $exe= "rr";
++      my $rr_dir= "$opt_vardir/rr". $mysqld->after('mysqld');
++      $ENV{'_RR_TRACE_DIR'}= $rr_dir;
++      mkpath($rr_dir);
+   } else {
+     # Default to not wait until pid file has been created
+     $wait_for_pid_file = 0;
