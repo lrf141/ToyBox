@@ -29,7 +29,7 @@ TEST_F(SystemTablespaceTest, getNewMaxTableId) {
   table_id result = sut->getNewMaxTableId();
   file_handler::File file;
   file.open(system_table::SYSTEM_TABLESPACE_PATH);
-  system_table::SystemTablespace systemTablespace(0);
+  system_table::SystemTablespaceImpl systemTablespace(0);
   size_t readSize = file.read(systemTablespace.toBinary(),
                               system_table::SYSTEM_TABLESPACE_SIZE);
 

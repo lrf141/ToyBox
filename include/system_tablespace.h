@@ -25,12 +25,17 @@ constexpr const int MYF_STRICT_MODE = (MY_FAE | MY_WME);
 constexpr const int MYF_THROUGH_ALL_ERRORS = 0;
 constexpr const int MAX_TABLE_ID_INITIAL_VALUE = 0;
 
-class SystemTablespace {
- private:
+struct __attribute__ ((__packed__)) SystemTablespace {
   table_id maxTableId;
+};
+
+class SystemTablespaceImpl {
+ private:
+  SystemTablespace systemTablespace;
  public:
-  SystemTablespace() : maxTableId(0) {}
-  explicit SystemTablespace(table_id tableId) : maxTableId(tableId) {}
+  SystemTablespaceImpl() : systemTablespace(SystemTablespace{0}) {}
+  explicit SystemTablespaceImpl(table_id tableId)
+      : systemTablespace(SystemTablespace{tableId}) {}
   void incrementMaxTableId();
   table_id getMaxTableId() const;
   uchar *toBinary();
@@ -39,7 +44,7 @@ class SystemTablespace {
 class SystemTablespaceHandler {
  private:
   file_handler::File file;
-  SystemTablespace systemTablespace;
+  SystemTablespaceImpl systemTablespace;
  public:
   SystemTablespaceHandler();
   ~SystemTablespaceHandler() {}
