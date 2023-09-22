@@ -8,7 +8,7 @@ SET(TOYBOX_SRC
         bufpool.cc bufpool.h
         page.cc page.h
         file.cc file.h
-        system_tablespace.cc
+        system/system_tablespace.cc
         file_handler.cc
         tablespace.cc
         )
