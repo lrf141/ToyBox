@@ -36,7 +36,7 @@ class TablespaceHeaderImpl {
   TablespaceHeader tablespaceHeader{};
  public:
   TablespaceHeaderImpl() {}
-  TablespaceHeaderImpl(uint64_t tableId) {
+  explicit TablespaceHeaderImpl(uint64_t tableId) {
     tablespaceHeader = TablespaceHeader{tableId, 0};
   }
   void read(file_handler::FileDescriptor fd);
