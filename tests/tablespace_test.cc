@@ -1,8 +1,9 @@
 
+#include "tablespace.h"
 #include <gtest/gtest.h>
+#include <filesystem>
 #include <iostream>
 #include "system_tablespace.h"
-#include "tablespace.h"
 
 class TablespaceTest : public testing::Test {
  protected:
@@ -16,6 +17,12 @@ class TablespaceTest : public testing::Test {
   void TearDown() override {
     delete sut;
     sut = nullptr;
+    if (std::filesystem::is_regular_file(path1)) {
+      std::remove(path1);
+    }
+    if (std::filesystem::is_regular_file(path2)) {
+      std::remove(path2);
+    }
   }
 };
 
