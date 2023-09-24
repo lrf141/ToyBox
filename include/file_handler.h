@@ -59,7 +59,9 @@ class File {
   void open(const char *path);
   void close() const;
   size_t read(uchar *buf, int size) const;
+  size_t read(uchar *buf, int size, my_off_t offset) const;
   size_t write(uchar *buf, int size) const;
+  size_t write(uchar *buf, int size, my_off_t offset) const;
   FileDescriptor getFileDescriptor() const {
     return fileDescriptor;
   }

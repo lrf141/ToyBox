@@ -39,8 +39,9 @@ void buf::BufPool::write(uchar *buf, uint32_t size, uint64_t tableId, uint32_t p
 }
 
 void buf::BufPool::flush(File fd, Page *page, uint32_t pageId) {
-  FileUtil::seek(fd,
-                 TABLE_SPACE_START_POSITION + TABLE_SPACE_HEADER_SIZE + SYSTEM_PAGE_SIZE + (PAGE_SIZE * pageId),
+  FileUtil::seek(fd, 0
+                     + 16
+                     + 4096 + (PAGE_SIZE * pageId),
                  MY_SEEK_SET,
                  MYF(0)
   );

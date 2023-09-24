@@ -39,6 +39,7 @@
 */
 
 #include <sys/types.h>
+#include <cinttypes>
 
 #include "my_base.h" /* ha_rows */
 #include "my_compiler.h"
@@ -50,6 +51,7 @@
 #include "file.h"
 #include "sql_string.h"
 #include "system_tablespace.h"
+#include "tablespace.h"
 
 #define PLUGIN_AUTHOR_ME "lrf141"
 
@@ -60,12 +62,9 @@
 class Toybox_share : public Handler_share {
  public:
   THR_LOCK lock;
-  File tableFile;
-  TableSpaceHeader *tableSpaceHeader;
-  SystemPageHeader *systemPageHeader;
-
   // example: [database name]/[table name].[ext]
   char tableFilePath[FN_REFLEN];
+
   Toybox_share();
   ~Toybox_share() override {
     thr_lock_delete(&lock);

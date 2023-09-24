@@ -27,8 +27,18 @@ size_t File::read(uchar *buf, int size) const {
   return FileUtil::read(fileDescriptor, buf, size);
 }
 
+size_t File::read(uchar *buf, int size, my_off_t offset) const {
+  FileUtil::seek(fileDescriptor, offset, SEEK_SET, MYF(0));
+  return FileUtil::read(fileDescriptor, buf, size);
+}
+
 size_t File::write(uchar *buf, int size) const {
   FileUtil::seek(fileDescriptor, 0, SEEK_SET, MYF(0));
+  return FileUtil::write(fileDescriptor, buf, size);
+}
+
+size_t File::write(uchar *buf, int size, my_off_t offset) const {
+  FileUtil::seek(fileDescriptor, offset, SEEK_SET, MYF(0));
   return FileUtil::write(fileDescriptor, buf, size);
 }
 

@@ -106,13 +106,12 @@
 #include "sql/field.h"
 #include "sql/sql_class.h"
 #include "sql/sql_plugin.h"
-#include "table_file.h"
 #include "typelib.h"
 
-static PSI_file_key key_file_data;
+extern PSI_file_key tablespace_key;
 extern PSI_file_key system_tablespace_key;
 static PSI_file_info all_toybox_files[] = {
-    {&key_file_data, "data", 0, 0, PSI_DOCUMENT_ME},
+    {&tablespace_key, "data", 0, 0, PSI_DOCUMENT_ME},
     {&system_tablespace_key, "system", 0, 0, PSI_DOCUMENT_ME}
 };
 
@@ -275,26 +274,13 @@ static bool toybox_is_supported_system_table(const char *db,
 int ha_toybox::open(const char *name, int, uint, const dd::Table *) {
   DBUG_TRACE;
 
-  File tableFile;
   char tableFilePath[FN_REFLEN];
   FileUtil::convertToTableFilePath(tableFilePath, name, ".json");
 
   if (!(share = get_share())) return 1;
   thr_lock_data_init(&share->lock, &lock, nullptr);
 
-  tableFile = TableFileImpl::open(key_file_data, tableFilePath);
-  if (tableFile < 0) {
-    return CANNOT_OPEN_TABLE_FILE;
-  }
-  share->tableFile = tableFile;
   strcpy(share->tableFilePath, tableFilePath);
-
-  TableSpaceHeader *tableSpaceHeader = TableFileImpl::readTableSpaceHeader(tableFile);
-  share->tableSpaceHeader = tableSpaceHeader;
-
-  SystemPageHeader *systemPageHeader = TableFileImpl::readSystemPageHeader(tableFile);
-  share->systemPageHeader = systemPageHeader;
-
   return 0;
 }
 
@@ -315,7 +301,7 @@ int ha_toybox::open(const char *name, int, uint, const dd::Table *) {
 
 int ha_toybox::close(void) {
   DBUG_TRACE;
-  return TableFileImpl::close(get_share()->tableFile);
+  return 0;
 }
 
 /**
@@ -366,7 +352,8 @@ int ha_toybox::write_row(uchar *buf) {
 
 void ha_toybox::insert_to_page(uchar *record) {
 
-  uint64_t tableId = get_share()->tableSpaceHeader->tableSpaceId;
+  tablespace::TablespaceHandler tablespaceHandler = tablespace::TablespaceHandler(share->tableFilePath);
+  uint64_t tablespaceId = tablespaceHandler.getTablespaceHeader().getId();
 
   // skip null bitmap (first 1 byte)
   record = (record + 1);
@@ -388,7 +375,9 @@ void ha_toybox::insert_to_page(uchar *record) {
       insertPos += dataLength;
     }
   }
-  bufPool->write(fixedLengthBuf, columnSize, tableId, share->tableSpaceHeader->pageCount, share->tableFile);
+  bufPool->write(fixedLengthBuf, columnSize, tablespaceId,
+                 tablespaceHandler.getTablespaceHeader().getPageCount(),
+                 tablespaceHandler.getFileDescriptor());
   free(fixedLengthBuf);
 }
 
@@ -563,10 +552,13 @@ int ha_toybox::rnd_end() {
 int ha_toybox::rnd_next(uchar *buf) {
   DBUG_TRACE;
 
-  uint64_t tableId = share->tableSpaceHeader->tableSpaceId;
+  tablespace::TablespaceHandler tablespaceHandler = tablespace::TablespaceHandler(share->tableFilePath);
 
-  if (share->tableSpaceHeader->pageCount == page_scan_now_cur) {
-    Page *page = TableFileImpl::readPage(share->tableFile, page_scan_now_cur);
+  uint64_t tableId = tablespaceHandler.getTablespaceHeader().getId();
+
+  if (tablespaceHandler.getTablespaceHeader().getPageCount() == page_scan_now_cur) {
+    Page *page = TableFileImpl::readPage(tablespaceHandler.getFileDescriptor(),
+                                         page_scan_now_cur);
     uint32_t tupleCount = page->pageHeader.tupleCount;
     free(page);
     if (tupleCount == page_row_scan_now_cur) {
@@ -585,7 +577,9 @@ int ha_toybox::rnd_next(uchar *buf) {
 
   uchar *tupleBuf = (uchar *)calloc(sizeof(uchar), fixedSize);
   // read fix size columns
-  bufPool->read(tupleBuf, fixedSize, table_scan_now_cur + 1, tableId, page_scan_now_cur, share->tableFile);
+  bufPool->read(tupleBuf, fixedSize, table_scan_now_cur + 1, tableId,
+                page_scan_now_cur,
+                tablespaceHandler.getFileDescriptor());
 
   int fieldCount = 0;
   for (Field **field = table->field; *field; field++) {
@@ -825,7 +819,7 @@ int ha_toybox::delete_table(const char *from, const dd::Table *) {
   DBUG_TRACE;
   char tableFilePath[FN_REFLEN];
   FileUtil::convertToTableFilePath(tableFilePath, from, ".json");
-  int err = TableFileImpl::remove(key_file_data, tableFilePath);
+  int err = TableFileImpl::remove(tablespace_key, tableFilePath);
   if (err != 0) {
     return CANNOT_DELETE_TABLE_FILE;
   }
@@ -900,7 +894,7 @@ static MYSQL_THDVAR_UINT(create_count_thdvar, 0, nullptr, nullptr, nullptr, 0,
  * @param name ex) './[db name]/[tbl name]' without ext
  * @return
  */
-int ha_toybox::create(const char *name, TABLE *form, HA_CREATE_INFO *,
+int ha_toybox::create(const char *name, TABLE *, HA_CREATE_INFO *,
                        dd::Table *) {
   DBUG_TRACE;
   mysql_mutex_lock(&toybox_system_table_lock);
@@ -916,40 +910,19 @@ int ha_toybox::create(const char *name, TABLE *form, HA_CREATE_INFO *,
 
   // TRUNCATE TABLE
   if (thd_sql_command(thd) == SQLCOM_TRUNCATE) {
-    newTableFile = TableFileImpl::truncate(key_file_data, tableFilePath);
+    newTableFile = TableFileImpl::truncate(tablespace_key, tableFilePath);
     if (newTableFile < 0) {
       return -1;
     }
   } else {
     // CREATE TABLE
-    newTableFile = TableFileImpl::create(key_file_data, tableFilePath);
+    newTableFile = tablespace::TablespaceHandler::create(tableFilePath, maxTableId);
     if (newTableFile < 0) {
       return -1;
     }
   }
   strcpy(get_share()->tableFilePath, tableFilePath);
 
-  // create table space part
-  TableSpaceHeader tableSpaceHeader{};
-  tableSpaceHeader.tableSpaceId = maxTableId;
-  tableSpaceHeader.pageCount = 0;
-  size_t tableSpaceHeaderSize = TableFileImpl::writeTableSpaceHeader(newTableFile, tableSpaceHeader);
-  assert(tableSpaceHeaderSize == TABLE_SPACE_HEADER_SIZE);
-
-  // reserve SystemPage Area
-  size_t systemPageSize = TableFileImpl::reserveSystemPage(newTableFile);
-  assert(systemPageSize == SYSTEM_PAGE_SIZE);
-
-  // create system page header part
-  SystemPageHeader systemPageHeader{};
-  int columnCount = 0;
-  for (Field **field = form->s->field; *field; field++) {
-    columnCount++;
-  }
-  systemPageHeader.pageId = SYSTEM_PAGE_ID;
-  systemPageHeader.columnCount = columnCount;
-  size_t systemPageHeaderSize = TableFileImpl::writeSystemPageHeader(newTableFile, systemPageHeader);
-  assert(systemPageHeaderSize == SYSTEM_PAGE_HEADER_SIZE);
 
   size_t pageSize = TableFileImpl::reservePage(newTableFile, 0);
   assert(pageSize == PAGE_SIZE);

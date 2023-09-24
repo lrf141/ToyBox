@@ -43,38 +43,38 @@ int TableFileImpl::close(File file) {
 }
 
 TableSpaceHeader *TableFileImpl::readTableSpaceHeader(File fd) {
-  uchar *buf = (uchar *)calloc(TABLE_SPACE_HEADER_SIZE, sizeof(uchar));
+  uchar *buf = (uchar *)calloc(16, sizeof(uchar));
   TableSpaceHeader *tableSpaceHeader;
-  FileUtil::seek(fd, TABLE_SPACE_START_POSITION, MY_SEEK_SET, MYF(0));
-  size_t readSize = read(fd, buf, TABLE_SPACE_HEADER_SIZE);
-  assert(readSize == TABLE_SPACE_HEADER_SIZE);
+  FileUtil::seek(fd, 0, MY_SEEK_SET, MYF(0));
+  size_t readSize = read(fd, buf, 16);
+  assert(readSize == 16);
   tableSpaceHeader = (TableSpaceHeader *)buf;
   return tableSpaceHeader;
 }
 
 size_t TableFileImpl::writeTableSpaceHeader(File fd, TableSpaceHeader tableSpaceHeader) {
-  uchar *buf = (uchar *)calloc(TABLE_SPACE_HEADER_SIZE, sizeof(uchar));
+  uchar *buf = (uchar *)calloc(16, sizeof(uchar));
   buf = reinterpret_cast<uchar *>(&tableSpaceHeader);
-  FileUtil::seek(fd, TABLE_SPACE_START_POSITION, MY_SEEK_SET, MYF(0));
-  size_t wroteSize = write(fd, buf, TABLE_SPACE_HEADER_SIZE);
+  FileUtil::seek(fd, 0, MY_SEEK_SET, MYF(0));
+  size_t wroteSize = write(fd, buf, 16);
   return wroteSize;
 }
 
 SystemPageHeader *TableFileImpl::readSystemPageHeader(File fd) {
-  uchar *buf = (uchar *)calloc(SYSTEM_PAGE_HEADER_SIZE, sizeof(uchar));
+  uchar *buf = (uchar *)calloc(16, sizeof(uchar));
   SystemPageHeader *systemPageHeader;
-  FileUtil::seek(fd, TABLE_SPACE_START_POSITION + TABLE_SPACE_HEADER_SIZE, MY_SEEK_SET, MYF(0));
-  size_t readSize = read(fd, buf, SYSTEM_PAGE_HEADER_SIZE);
-  assert(readSize == SYSTEM_PAGE_HEADER_SIZE);
+  FileUtil::seek(fd, 0 + 16, MY_SEEK_SET, MYF(0));
+  size_t readSize = read(fd, buf, 16);
+  assert(readSize == 16);
   systemPageHeader = (SystemPageHeader *)buf;
   return systemPageHeader;
 }
 
 size_t TableFileImpl::writeSystemPageHeader(File fd, SystemPageHeader systemPageHeader) {
-  uchar *buf = (uchar *)calloc(SYSTEM_PAGE_HEADER_SIZE, sizeof(uchar));
+  uchar *buf = (uchar *)calloc(16, sizeof(uchar));
   buf = reinterpret_cast<uchar *>(&systemPageHeader);
-  FileUtil::seek(fd, TABLE_SPACE_START_POSITION + TABLE_SPACE_HEADER_SIZE, MY_SEEK_SET, MYF(0));
-  size_t wroteSize = write(fd, buf, SYSTEM_PAGE_HEADER_SIZE);
+  FileUtil::seek(fd, 0 + 16, MY_SEEK_SET, MYF(0));
+  size_t wroteSize = write(fd, buf, 16);
   return wroteSize;
 }
 
@@ -87,16 +87,18 @@ size_t TableFileImpl::write(File fd, uchar *buf, int writeSize) {
 }
 
 size_t TableFileImpl::reserveSystemPage(File fd) {
-  uchar *buf = (uchar *)calloc(SYSTEM_PAGE_SIZE, sizeof(uchar));
-  FileUtil::seek(fd, TABLE_SPACE_START_POSITION + TABLE_SPACE_HEADER_SIZE, MY_SEEK_SET, MYF(0));
-  size_t writeSize = write(fd, buf, SYSTEM_PAGE_SIZE);
+  uchar *buf = (uchar *)calloc(4096, sizeof(uchar));
+  FileUtil::seek(fd, 0 + 16, MY_SEEK_SET, MYF(0));
+  size_t writeSize = write(fd, buf, 4096);
   free(buf);
   return writeSize;
 }
 
 size_t TableFileImpl::reservePage(File fd, int pageId) {
   uchar *buf = (uchar *)calloc(PAGE_SIZE, sizeof(uchar));
-  my_off_t offset = TABLE_SPACE_START_POSITION + TABLE_SPACE_HEADER_SIZE + SYSTEM_PAGE_SIZE + (PAGE_SIZE * pageId);
+  my_off_t offset = 0 +
+                    16 +
+                    4096 + (PAGE_SIZE * pageId);
   FileUtil::seek(fd, offset, MY_SEEK_SET, MYF(0));
   size_t writeSize = write(fd, buf, PAGE_SIZE);
   free(buf);
@@ -106,7 +108,9 @@ size_t TableFileImpl::reservePage(File fd, int pageId) {
 Page *TableFileImpl::readPage(File fd, uint32_t pageId) {
   Page *page = (Page *)malloc(sizeof(Page));
   uchar *buf = (uchar *)calloc(PAGE_SIZE, sizeof(uchar));
-  my_off_t offset = TABLE_SPACE_START_POSITION + TABLE_SPACE_HEADER_SIZE + SYSTEM_PAGE_SIZE + (PAGE_SIZE * pageId);
+  my_off_t offset = 0
+                    + 16
+                    + 4096 + (PAGE_SIZE * pageId);
   FileUtil::seek(fd, offset, MY_SEEK_SET, MYF(0));
   size_t readSize = read(fd, buf, PAGE_SIZE);
   assert(readSize == PAGE_SIZE);
