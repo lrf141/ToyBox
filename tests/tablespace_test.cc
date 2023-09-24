@@ -27,12 +27,14 @@ class TablespaceTest : public testing::Test {
 };
 
 TEST_F(TablespaceTest, createAndOpenTablespace) {
-  // Setup & Exercise
+  // Setup
   uint64_t tablespaceId = 1;
+
+  // Exercise
   tablespace::TablespaceHandler::create(path1, tablespaceId);
-  sut = new tablespace::TablespaceHandler(path1);
 
   // Verify
+  sut = new tablespace::TablespaceHandler(path1);
   ASSERT_GT(sut->getFileDescriptor(), 0);
   ASSERT_EQ(sut->getTablespaceHeader().getId(), 1);
   ASSERT_EQ(sut->getTablespaceHeader().getPageCount(), 0);
