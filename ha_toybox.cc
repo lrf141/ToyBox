@@ -276,7 +276,7 @@ int ha_toybox::open(const char *name, int, uint, const dd::Table *) {
   DBUG_TRACE;
 
   char tableFilePath[FN_REFLEN];
-  FileUtil::convertToTableFilePath(tableFilePath, name, ".json");
+  FileUtil::convertToTableFilePath(tableFilePath, name, tablespace::FILE_EXT);
 
   if (!(share = get_share())) return 1;
   thr_lock_data_init(&share->lock, &lock, nullptr);
@@ -819,11 +819,11 @@ int ha_toybox::delete_table(const char *from, const dd::Table *) {
   // ex) ./[database name]/[table file]
   DBUG_TRACE;
   char tableFilePath[FN_REFLEN];
-  FileUtil::convertToTableFilePath(tableFilePath, from, ".json");
-  int err = TableFileImpl::remove(tablespace_key, tableFilePath);
-  if (err != 0) {
-    return CANNOT_DELETE_TABLE_FILE;
-  }
+  FileUtil::convertToTableFilePath(tableFilePath, from, tablespace::FILE_EXT);
+
+  tablespace::TablespaceHandler tablespaceHandler = tablespace::TablespaceHandler(tableFilePath);
+  tablespaceHandler.remove();
+
   return 0;
 }
 
@@ -903,7 +903,7 @@ int ha_toybox::create(const char *name, TABLE *, HA_CREATE_INFO *,
   // FN_REFLEN is max table path size
   char tableFilePath[FN_REFLEN];
 
-  FileUtil::convertToTableFilePath(tableFilePath, name, ".json");
+  FileUtil::convertToTableFilePath(tableFilePath, name, tablespace::FILE_EXT);
 
   // Get new max tableId
   tablespace_id maxTablespaceId = getNewMaxTablespaceId();

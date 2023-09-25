@@ -13,6 +13,8 @@
 
 namespace tablespace {
 
+constexpr const char *FILE_EXT = ".toy";
+
 constexpr const int TABLE_SPACE_START_POSITION = 0;
 constexpr const int TABLE_SPACE_HEADER_START_POSITION
     = TABLE_SPACE_START_POSITION;
