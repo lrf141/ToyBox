@@ -5,11 +5,16 @@
 #include <fcntl.h>
 
 #include "file_util.h"
+#include "file_config.h"
 
 namespace file_handler {
 
 void File::open(const char *path) {
   fileDescriptor = FileUtil::open(fileKey, path, O_RDWR, MYF(myFlags));
+}
+
+void File::remove(const char *path) {
+  FileUtil::remove(fileKey, path, MYF(file_config::MYF_STRICT_MODE));
 }
 
 void File::close() const {

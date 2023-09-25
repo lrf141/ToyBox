@@ -902,7 +902,6 @@ int ha_toybox::create(const char *name, TABLE *, HA_CREATE_INFO *,
   THD *thd = this->ha_thd();
   // FN_REFLEN is max table path size
   char tableFilePath[FN_REFLEN];
-  File newTableFile;
 
   FileUtil::convertToTableFilePath(tableFilePath, name, ".json");
 
@@ -911,20 +910,18 @@ int ha_toybox::create(const char *name, TABLE *, HA_CREATE_INFO *,
 
   // TRUNCATE TABLE
   if (thd_sql_command(thd) == SQLCOM_TRUNCATE) {
-    newTableFile = TableFileImpl::truncate(tablespace_key, tableFilePath);
-    if (newTableFile < 0) {
-      return -1;
-    }
-  } else {
-    // CREATE TABLE
-    newTableFile = tablespace::TablespaceHandler::create(tableFilePath,
-                                                         maxTablespaceId);
-    if (newTableFile < 0) {
-      return -1;
-    }
+    tablespace::TablespaceHandler oldTablespace =
+        tablespace::TablespaceHandler(tableFilePath);
+    oldTablespace.remove();
   }
-  strcpy(get_share()->tableFilePath, tableFilePath);
+  // CREATE TABLE
+  File newTableFile = tablespace::TablespaceHandler::create(tableFilePath,
+                                                            maxTablespaceId);
+  if (newTableFile < 0) {
+    return -1;
+  }
 
+  strcpy(get_share()->tableFilePath, tableFilePath);
 
   size_t pageSize = TableFileImpl::reservePage(newTableFile, 0);
   assert(pageSize == PAGE_SIZE);

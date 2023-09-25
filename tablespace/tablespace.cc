@@ -54,7 +54,8 @@ uchar *SystemPageHeaderImpl::toBinary() {
 }
 
 TablespaceHandler::TablespaceHandler(const char *path)
-    : tablespaceHeader(TablespaceHeaderImpl()),
+    : path(path),
+      tablespaceHeader(TablespaceHeaderImpl()),
       systemPageHeader(SystemPageHeaderImpl())
 {
   file = file_handler::File(path, file_config::MYF_STRICT_MODE, tablespace_key);
@@ -79,6 +80,10 @@ file_handler::FileDescriptor TablespaceHandler::create(const char *path,
                         SYSTEM_PAGE_HEADER_START_POSITION);
   assert(writeSize == SYSTEM_PAGE_SIZE);
   return fil.getFileDescriptor();
+}
+
+void TablespaceHandler::remove() {
+  file.remove(path);
 }
 
 TablespaceHeaderImpl& TablespaceHandler::getTablespaceHeader() {

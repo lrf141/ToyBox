@@ -57,6 +57,7 @@ class File {
   }
   static File create(const char *path, PSI_file_key key);
   void open(const char *path);
+  void remove(const char *path);
   void close() const;
   size_t read(uchar *buf, int size) const;
   size_t read(uchar *buf, int size, my_off_t offset) const;

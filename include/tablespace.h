@@ -66,6 +66,7 @@ class SystemPageHeaderImpl {
 
 class TablespaceHandler {
  private:
+  const char *path;
   file_handler::File file;
   TablespaceHeaderImpl tablespaceHeader;
   SystemPageHeaderImpl systemPageHeader;
@@ -73,6 +74,7 @@ class TablespaceHandler {
   TablespaceHandler(const char *path);
   ~TablespaceHandler() {}
   static file_handler::FileDescriptor create(const char *path, tablespace_id tablespaceId);
+  void remove();
   TablespaceHeaderImpl& getTablespaceHeader();
   SystemPageHeaderImpl& getSystemPageHeader();
   void flushTablespaceHeader();
