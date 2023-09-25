@@ -10,7 +10,7 @@ SET(TOYBOX_SRC
         file.cc file.h
         system/system_tablespace.cc
         file_handler.cc
-        tablespace.cc
+        tablespace/tablespace.cc
         )
 
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/storage/toybox/include/)

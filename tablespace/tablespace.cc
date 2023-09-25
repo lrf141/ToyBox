@@ -3,7 +3,7 @@
 //
 #include "tablespace.h"
 #include "file_config.h"
-#include "file_util.h"
+#include "storage/toybox/file_util.h"
 
 PSI_file_key tablespace_key;
 
