@@ -1,4 +1,4 @@
-<mxfile host="app.diagrams.net" modified="2023-08-11T15:19:35.849Z" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36" etag="ZuR-ooWfx7XP3RsMVRod" version="21.6.6" type="device">
+<mxfile host="app.diagrams.net" modified="2023-09-25T13:54:36.070Z" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36" etag="ET1KFSsy0rX8bNjMEi6-" version="21.8.2" type="device">
   <diagram name="ページ1" id="qp1X_snr1Usr0zYjhWub">
     <mxGraphModel dx="1434" dy="830" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2339" pageHeight="3300" background="#ffffff" math="0" shadow="0">
       <root>
@@ -147,6 +147,27 @@
             <mxPoint x="440" y="840" as="sourcePoint" />
             <mxPoint x="160" y="1010" as="targetPoint" />
           </mxGeometry>
+        </mxCell>
+        <mxCell id="HwRXT1nWVoz5UTMhd5PL-1" value="" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="730" y="440" width="280" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="HwRXT1nWVoz5UTMhd5PL-4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="HwRXT1nWVoz5UTMhd5PL-2" target="PwUVfdEYxXC1_0HfYMqG-4">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="700" y="460" />
+              <mxPoint x="700" y="490" />
+              <mxPoint x="530" y="490" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="HwRXT1nWVoz5UTMhd5PL-2" value="Page ID (8 byte)&amp;nbsp; = 0" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="730" y="440" width="280" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="HwRXT1nWVoz5UTMhd5PL-3" value="Tuple Size (8 byte)" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="730" y="480" width="280" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="HwRXT1nWVoz5UTMhd5PL-5" value="Next Page ID (8 byte)" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="730" y="520" width="280" height="40" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
