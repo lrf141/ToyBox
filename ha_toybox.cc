@@ -275,13 +275,13 @@ static bool toybox_is_supported_system_table(const char *db,
 int ha_toybox::open(const char *name, int, uint, const dd::Table *) {
   DBUG_TRACE;
 
-  char tableFilePath[FN_REFLEN];
-  FileUtil::convertToTableFilePath(tableFilePath, name, tablespace::FILE_EXT);
+  char tablespacePath[FN_REFLEN];
+  FileUtil::convertToTableFilePath(tablespacePath, name, tablespace::FILE_EXT);
 
   if (!(share = get_share())) return 1;
   thr_lock_data_init(&share->lock, &lock, nullptr);
 
-  strcpy(share->tableFilePath, tableFilePath);
+  strcpy(share->tablespacePath, tablespacePath);
   return 0;
 }
 
@@ -353,7 +353,7 @@ int ha_toybox::write_row(uchar *buf) {
 
 void ha_toybox::insert_to_page(uchar *record) {
 
-  tablespace::TablespaceHandler tablespaceHandler = tablespace::TablespaceHandler(share->tableFilePath);
+  tablespace::TablespaceHandler tablespaceHandler = tablespace::TablespaceHandler(share->tablespacePath);
   uint64_t tablespaceId = tablespaceHandler.getTablespaceHeader().getId();
 
   // skip null bitmap (first 1 byte)
@@ -553,7 +553,7 @@ int ha_toybox::rnd_end() {
 int ha_toybox::rnd_next(uchar *buf) {
   DBUG_TRACE;
 
-  tablespace::TablespaceHandler tablespaceHandler = tablespace::TablespaceHandler(share->tableFilePath);
+  tablespace::TablespaceHandler tablespaceHandler = tablespace::TablespaceHandler(share->tablespacePath);
 
   uint64_t tableId = tablespaceHandler.getTablespaceHeader().getId();
 
@@ -818,10 +818,10 @@ int ha_toybox::delete_table(const char *from, const dd::Table *) {
   // from variable is path to table file.
   // ex) ./[database name]/[table file]
   DBUG_TRACE;
-  char tableFilePath[FN_REFLEN];
-  FileUtil::convertToTableFilePath(tableFilePath, from, tablespace::FILE_EXT);
+  char tablespacePath[FN_REFLEN];
+  FileUtil::convertToTableFilePath(tablespacePath, from, tablespace::FILE_EXT);
 
-  tablespace::TablespaceHandler tablespaceHandler = tablespace::TablespaceHandler(tableFilePath);
+  tablespace::TablespaceHandler tablespaceHandler = tablespace::TablespaceHandler(tablespacePath);
   tablespaceHandler.remove();
 
   return 0;
@@ -901,9 +901,9 @@ int ha_toybox::create(const char *name, TABLE *, HA_CREATE_INFO *,
   mysql_mutex_lock(&toybox_system_table_lock);
   THD *thd = this->ha_thd();
   // FN_REFLEN is max table path size
-  char tableFilePath[FN_REFLEN];
+  char tablespacePath[FN_REFLEN];
 
-  FileUtil::convertToTableFilePath(tableFilePath, name, tablespace::FILE_EXT);
+  FileUtil::convertToTableFilePath(tablespacePath, name, tablespace::FILE_EXT);
 
   // Get new max tableId
   tablespace_id maxTablespaceId = getNewMaxTablespaceId();
@@ -911,14 +911,14 @@ int ha_toybox::create(const char *name, TABLE *, HA_CREATE_INFO *,
   // TRUNCATE TABLE
   if (thd_sql_command(thd) == SQLCOM_TRUNCATE) {
     tablespace::TablespaceHandler oldTablespace =
-        tablespace::TablespaceHandler(tableFilePath);
+        tablespace::TablespaceHandler(tablespacePath);
     oldTablespace.remove();
   }
   // CREATE TABLE
   tablespace::TablespaceHandler newTablespaceHandler =
-      tablespace::TablespaceHandler::create(tableFilePath, maxTablespaceId);
+      tablespace::TablespaceHandler::create(tablespacePath, maxTablespaceId);
 
-  strcpy(get_share()->tableFilePath, tableFilePath);
+  strcpy(get_share()->tablespacePath, tablespacePath);
 
   size_t pageSize = TableFileImpl::reservePage(newTablespaceHandler.getFileDescriptor(), 0);
   assert(pageSize == PAGE_SIZE);

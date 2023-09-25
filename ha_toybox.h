@@ -63,7 +63,7 @@ class Toybox_share : public Handler_share {
  public:
   THR_LOCK lock;
   // example: [database name]/[table name].[ext]
-  char tableFilePath[FN_REFLEN];
+  char tablespacePath[FN_REFLEN];
 
   Toybox_share();
   ~Toybox_share() override {
