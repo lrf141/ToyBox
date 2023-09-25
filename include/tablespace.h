@@ -73,8 +73,10 @@ class TablespaceHandler {
   TablespaceHandler(const char *path);
   ~TablespaceHandler() {}
   static file_handler::FileDescriptor create(const char *path, tablespace_id tablespaceId);
-  TablespaceHeaderImpl getTablespaceHeader();
-  SystemPageHeaderImpl getSystemPageHeader();
+  TablespaceHeaderImpl& getTablespaceHeader();
+  SystemPageHeaderImpl& getSystemPageHeader();
+  void flushTablespaceHeader();
+  void flushSystemPageHeader();
   file_handler::FileDescriptor getFileDescriptor();
 };
 

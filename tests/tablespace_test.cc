@@ -12,6 +12,7 @@ class TablespaceTest : public testing::Test {
   const char *path2 = "./huga";
 
   void SetUp() override {
+    tablespace::TablespaceHandler::create(path2, 123L);
   }
 
   void TearDown() override {
@@ -38,4 +39,19 @@ TEST_F(TablespaceTest, createAndOpenTablespace) {
   ASSERT_GT(sut->getFileDescriptor(), 0);
   ASSERT_EQ(sut->getTablespaceHeader().getId(), 1);
   ASSERT_EQ(sut->getTablespaceHeader().getPageCount(), 0);
+}
+
+TEST_F(TablespaceTest, updateTablespaceHeader) {
+  // Setup
+  {
+    tablespace::TablespaceHandler tablespaceHandler = tablespace::TablespaceHandler(path2);
+    tablespaceHandler.getTablespaceHeader().incrementPageCount();
+    tablespaceHandler.flushTablespaceHeader();
+  }
+
+  // Exercise
+  sut = new tablespace::TablespaceHandler(path2);
+
+  // Verify
+  ASSERT_EQ(sut->getTablespaceHeader().getPageCount(), 1);
 }

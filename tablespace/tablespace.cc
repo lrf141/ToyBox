@@ -81,16 +81,30 @@ file_handler::FileDescriptor TablespaceHandler::create(const char *path,
   return fil.getFileDescriptor();
 }
 
-TablespaceHeaderImpl TablespaceHandler::getTablespaceHeader() {
+TablespaceHeaderImpl& TablespaceHandler::getTablespaceHeader() {
   return tablespaceHeader;
 }
 
-SystemPageHeaderImpl TablespaceHandler::getSystemPageHeader() {
+SystemPageHeaderImpl& TablespaceHandler::getSystemPageHeader() {
   return systemPageHeader;
 }
 
 file_handler::FileDescriptor TablespaceHandler::getFileDescriptor() {
   return file.getFileDescriptor();
+}
+
+void TablespaceHandler::flushTablespaceHeader() {
+  size_t writeSize = file.write(tablespaceHeader.toBinary(),
+                                TABLE_SPACE_HEADER_SIZE,
+                                TABLE_SPACE_HEADER_START_POSITION);
+  assert(writeSize == TABLE_SPACE_HEADER_SIZE);
+}
+
+void TablespaceHandler::flushSystemPageHeader() {
+  size_t writeSize = file.write(systemPageHeader.toBinary(),
+                                SYSTEM_PAGE_SIZE,
+                                SYSTEM_PAGE_HEADER_START_POSITION);
+  assert(writeSize == SYSTEM_PAGE_SIZE);
 }
 
 } // namespace tablespace
