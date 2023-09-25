@@ -55,3 +55,15 @@ TEST_F(TablespaceTest, updateTablespaceHeader) {
   // Verify
   ASSERT_EQ(sut->getTablespaceHeader().getPageCount(), 1);
 }
+
+TEST_F(TablespaceTest, removeTablespace) {
+  // Setup
+  sut = new tablespace::TablespaceHandler(path2);
+
+  // Exercise
+  sut->remove();
+
+  // Verify
+  bool existFile = std::filesystem::is_regular_file(path2);
+  ASSERT_FALSE(existFile);
+}
