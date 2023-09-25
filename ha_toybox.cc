@@ -915,21 +915,18 @@ int ha_toybox::create(const char *name, TABLE *, HA_CREATE_INFO *,
     oldTablespace.remove();
   }
   // CREATE TABLE
-  File newTableFile = tablespace::TablespaceHandler::create(tableFilePath,
-                                                            maxTablespaceId);
-  if (newTableFile < 0) {
-    return -1;
-  }
+  tablespace::TablespaceHandler::create(tableFilePath, maxTablespaceId);
+  tablespace::TablespaceHandler newTablespaceHandler =
+      tablespace::TablespaceHandler(tableFilePath);
 
   strcpy(get_share()->tableFilePath, tableFilePath);
 
-  size_t pageSize = TableFileImpl::reservePage(newTableFile, 0);
+  size_t pageSize = TableFileImpl::reservePage(newTablespaceHandler.getFileDescriptor(), 0);
   assert(pageSize == PAGE_SIZE);
 
-  int err = TableFileImpl::close(newTableFile);
   mysql_mutex_unlock(&toybox_system_table_lock);
 
-  return err;
+  return 0;
 }
 
 tablespace_id ha_toybox::getNewMaxTablespaceId() {
