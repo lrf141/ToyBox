@@ -44,7 +44,6 @@ class TablespaceHeaderImpl {
     tablespaceHeader = TablespaceHeader{tableId, 0};
   }
   void read(file_handler::FileDescriptor fd);
-  void flush(file_handler::FileDescriptor fd);
   void incrementPageCount();
   tablespace_id getId();
   uint64_t getPageCount();
@@ -63,7 +62,6 @@ class SystemPageHeaderImpl {
  public:
   SystemPageHeaderImpl() : systemPageHeader(SystemPageHeader{}) {}
   void read(file_handler::FileDescriptor fd);
-  void flush(file_handler::FileDescriptor fd);
   uchar *toBinary();
 };
 

@@ -15,12 +15,6 @@ void TablespaceHeaderImpl::read(file_handler::FileDescriptor fd) {
   assert(readSize == TABLE_SPACE_HEADER_SIZE);
 }
 
-void TablespaceHeaderImpl::flush(file_handler::FileDescriptor fd) {
-  FileUtil::seek(fd, TABLE_SPACE_START_POSITION, SEEK_SET, MYF(file_config::MYF_STRICT_MODE));
-  size_t writeSize = FileUtil::write(fd, toBinary(), TABLE_SPACE_HEADER_SIZE);
-  assert(writeSize == TABLE_SPACE_HEADER_SIZE);
-}
-
 void TablespaceHeaderImpl::incrementPageCount() {
   tablespaceHeader.pageCount++;
 }
@@ -41,12 +35,6 @@ void SystemPageHeaderImpl::read(file_handler::FileDescriptor fd) {
   FileUtil::seek(fd, SYSTEM_PAGE_HEADER_START_POSITION, SEEK_SET, MYF(file_config::MYF_STRICT_MODE));
   size_t readSize = FileUtil::read(fd, toBinary(), SYSTEM_PAGE_SIZE);
   assert(readSize == SYSTEM_PAGE_SIZE);
-}
-
-void SystemPageHeaderImpl::flush(file_handler::FileDescriptor fd) {
-  FileUtil::seek(fd, SYSTEM_PAGE_HEADER_START_POSITION, SEEK_SET, MYF(file_config::MYF_STRICT_MODE));
-  size_t writeSize = FileUtil::write(fd, toBinary(), SYSTEM_PAGE_HEADER_SIZE);
-  assert(writeSize == SYSTEM_PAGE_HEADER_SIZE);
 }
 
 uchar *SystemPageHeaderImpl::toBinary() {
