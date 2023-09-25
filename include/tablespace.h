@@ -5,6 +5,7 @@
 #define TOYBOX_TABLESPACE_H
 
 #include <cinttypes>
+#include <utility>
 
 #include "tablespace_type.h"
 #include "file_handler.h"
@@ -72,8 +73,14 @@ class TablespaceHandler {
   SystemPageHeaderImpl systemPageHeader;
  public:
   TablespaceHandler(const char *path);
+  TablespaceHandler(const char *path, file_handler::File file,
+                    TablespaceHeaderImpl header, SystemPageHeaderImpl sysPageHeader)
+      : path(path),
+        file(std::move(file)),
+        tablespaceHeader(header),
+        systemPageHeader(sysPageHeader) {}
   ~TablespaceHandler() {}
-  static file_handler::FileDescriptor create(const char *path, tablespace_id tablespaceId);
+  static TablespaceHandler create(const char *path, tablespace_id tablespaceId);
   void remove();
   TablespaceHeaderImpl& getTablespaceHeader();
   SystemPageHeaderImpl& getSystemPageHeader();

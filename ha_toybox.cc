@@ -915,9 +915,8 @@ int ha_toybox::create(const char *name, TABLE *, HA_CREATE_INFO *,
     oldTablespace.remove();
   }
   // CREATE TABLE
-  tablespace::TablespaceHandler::create(tableFilePath, maxTablespaceId);
   tablespace::TablespaceHandler newTablespaceHandler =
-      tablespace::TablespaceHandler(tableFilePath);
+      tablespace::TablespaceHandler::create(tableFilePath, maxTablespaceId);
 
   strcpy(get_share()->tableFilePath, tableFilePath);
 

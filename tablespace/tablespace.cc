@@ -65,7 +65,7 @@ TablespaceHandler::TablespaceHandler(const char *path)
   assert(readSize == SYSTEM_PAGE_HEADER_SIZE);
 }
 
-file_handler::FileDescriptor TablespaceHandler::create(const char *path,
+TablespaceHandler TablespaceHandler::create(const char *path,
                                                        tablespace_id tablespaceId) {
   file_handler::File fil = file_handler::File::create(path, tablespace_key);
   assert(fil.getFileDescriptor() > 0);
@@ -79,7 +79,8 @@ file_handler::FileDescriptor TablespaceHandler::create(const char *path,
                         SYSTEM_PAGE_SIZE,
                         SYSTEM_PAGE_HEADER_START_POSITION);
   assert(writeSize == SYSTEM_PAGE_SIZE);
-  return fil.getFileDescriptor();
+
+  return TablespaceHandler(path, fil, header, systemPage);
 }
 
 void TablespaceHandler::remove() {
