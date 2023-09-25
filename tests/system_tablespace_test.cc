@@ -4,6 +4,7 @@
 #include <gtest/gtest.h>
 #include <iostream>
 #include "system_tablespace.h"
+#include "tablespace_type.h"
 
 class SystemTablespaceTest : public testing::Test {
  protected:
@@ -21,12 +22,12 @@ class SystemTablespaceTest : public testing::Test {
   }
 };
 
-TEST_F(SystemTablespaceTest, getNewMaxTableId) {
+TEST_F(SystemTablespaceTest, getNewMaxTablespaceId) {
   // Setup
-  table_id newTableId = 1;
+  tablespace_id newTablespaceId = 1;
 
   // Exercise
-  table_id result = sut->getNewMaxTableId();
+  tablespace_id result = sut->getNewMaxTablespaceId();
   file_handler::File file;
   file.open(system_table::SYSTEM_TABLESPACE_PATH);
   system_table::SystemTablespaceImpl systemTablespace(0);
@@ -34,7 +35,7 @@ TEST_F(SystemTablespaceTest, getNewMaxTableId) {
                               system_table::SYSTEM_TABLESPACE_SIZE);
 
   // Verify
-  ASSERT_EQ(result, newTableId);
+  ASSERT_EQ(result, newTablespaceId);
   ASSERT_EQ(readSize, system_table::SYSTEM_TABLESPACE_SIZE);
-  ASSERT_EQ(systemTablespace.getMaxTableId(), newTableId);
+  ASSERT_EQ(systemTablespace.getMaxTablespaceId(), newTablespaceId);
 }

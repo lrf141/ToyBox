@@ -28,7 +28,7 @@ class TablespaceTest : public testing::Test {
 
 TEST_F(TablespaceTest, createAndOpenTablespace) {
   // Setup
-  uint64_t tablespaceId = 1;
+  tablespace_id tablespaceId = 1;
 
   // Exercise
   tablespace::TablespaceHandler::create(path1, tablespaceId);

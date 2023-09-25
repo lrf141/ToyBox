@@ -33,7 +33,7 @@ uchar *TablespaceHeaderImpl::toBinary() {
   return reinterpret_cast<uchar *>(&tablespaceHeader);
 }
 
-uint64_t TablespaceHeaderImpl::getId() {
+tablespace_id TablespaceHeaderImpl::getId() {
   return tablespaceHeader.id;
 }
 
@@ -64,10 +64,11 @@ TablespaceHandler::TablespaceHandler(const char *path)
   assert(readSize == SYSTEM_PAGE_HEADER_SIZE);
 }
 
-file_handler::FileDescriptor TablespaceHandler::create(const char *path, uint64_t tableId) {
+file_handler::FileDescriptor TablespaceHandler::create(const char *path,
+                                                       tablespace_id tablespaceId) {
   file_handler::File fil = file_handler::File::create(path, tablespace_key);
   assert(fil.getFileDescriptor() > 0);
-  TablespaceHeaderImpl header(tableId);
+  TablespaceHeaderImpl header(tablespaceId);
   SystemPageHeaderImpl systemPage;
   size_t writeSize = fil.write(header.toBinary(),
                                TABLE_SPACE_HEADER_SIZE,

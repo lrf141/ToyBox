@@ -107,6 +107,7 @@
 #include "sql/sql_class.h"
 #include "sql/sql_plugin.h"
 #include "typelib.h"
+#include "tablespace_type.h"
 
 extern PSI_file_key tablespace_key;
 extern PSI_file_key system_tablespace_key;
@@ -906,7 +907,7 @@ int ha_toybox::create(const char *name, TABLE *, HA_CREATE_INFO *,
   FileUtil::convertToTableFilePath(tableFilePath, name, ".json");
 
   // Get new max tableId
-  table_id maxTableId = getNewMaxTableId();
+  tablespace_id maxTablespaceId = getNewMaxTablespaceId();
 
   // TRUNCATE TABLE
   if (thd_sql_command(thd) == SQLCOM_TRUNCATE) {
@@ -916,7 +917,8 @@ int ha_toybox::create(const char *name, TABLE *, HA_CREATE_INFO *,
     }
   } else {
     // CREATE TABLE
-    newTableFile = tablespace::TablespaceHandler::create(tableFilePath, maxTableId);
+    newTableFile = tablespace::TablespaceHandler::create(tableFilePath,
+                                                         maxTablespaceId);
     if (newTableFile < 0) {
       return -1;
     }
@@ -933,9 +935,9 @@ int ha_toybox::create(const char *name, TABLE *, HA_CREATE_INFO *,
   return err;
 }
 
-table_id ha_toybox::getNewMaxTableId() {
+tablespace_id ha_toybox::getNewMaxTablespaceId() {
   system_table::SystemTablespaceHandler systemTablespaceHandler;
-  return systemTablespaceHandler.getNewMaxTableId();
+  return systemTablespaceHandler.getNewMaxTablespaceId();
 }
 
 struct st_mysql_storage_engine toybox_storage_engine = {

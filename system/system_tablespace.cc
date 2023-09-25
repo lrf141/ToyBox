@@ -9,12 +9,12 @@ PSI_file_key system_tablespace_key;
 
 namespace system_table {
 
-void SystemTablespaceImpl::incrementMaxTableId() {
-  systemTablespace.maxTableId++;
+void SystemTablespaceImpl::incrementMaxTablespaceId() {
+  systemTablespace.maxTablespaceId++;
 }
 
-table_id SystemTablespaceImpl::getMaxTableId() const {
-  return systemTablespace.maxTableId;
+tablespace_id SystemTablespaceImpl::getMaxTablespaceId() const {
+  return systemTablespace.maxTablespaceId;
 }
 
 uchar *SystemTablespaceImpl::toBinary() {
@@ -28,11 +28,11 @@ SystemTablespaceHandler::SystemTablespaceHandler()
   assert(readSize == SYSTEM_TABLESPACE_SIZE);
 }
 
-table_id SystemTablespaceHandler::getNewMaxTableId() {
-  systemTablespace.incrementMaxTableId();
+tablespace_id SystemTablespaceHandler::getNewMaxTablespaceId() {
+  systemTablespace.incrementMaxTablespaceId();
   size_t writeSize = file.write(systemTablespace.toBinary(), SYSTEM_TABLESPACE_SIZE);
   assert(writeSize == SYSTEM_TABLESPACE_SIZE);
-  return systemTablespace.getMaxTableId();
+  return systemTablespace.getMaxTablespaceId();
 }
 
 void SystemTablespaceHandler::create() {

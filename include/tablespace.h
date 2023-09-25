@@ -6,6 +6,7 @@
 
 #include <cinttypes>
 
+#include "tablespace_type.h"
 #include "file_handler.h"
 #include "system_tablespace.h"
 
@@ -27,7 +28,7 @@ constexpr const int VARIABLE_SIZE_COLUMN = 1;
 constexpr const int SYSTEM_PAGE_ID = 0;
 
 struct __attribute__ ((__packed__)) TablespaceHeader {
-  uint64_t id;
+  tablespace_id id;
   uint64_t pageCount;
 };
 
@@ -42,7 +43,7 @@ class TablespaceHeaderImpl {
   void read(file_handler::FileDescriptor fd);
   void flush(file_handler::FileDescriptor fd);
   void incrementPageCount();
-  uint64_t getId();
+  tablespace_id getId();
   uint64_t getPageCount();
   uchar *toBinary();
 };
@@ -71,7 +72,7 @@ class TablespaceHandler {
  public:
   TablespaceHandler(const char *path);
   ~TablespaceHandler() {}
-  static file_handler::FileDescriptor create(const char *path, uint64_t tableId);
+  static file_handler::FileDescriptor create(const char *path, tablespace_id tablespaceId);
   TablespaceHeaderImpl getTablespaceHeader();
   SystemPageHeaderImpl getSystemPageHeader();
   file_handler::FileDescriptor getFileDescriptor();

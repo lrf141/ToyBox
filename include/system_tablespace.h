@@ -9,12 +9,10 @@
 #include "mysql/components/services/bits/psi_file_bits.h"
 
 #include "file_handler.h"
+#include "tablespace_type.h"
 
 #ifndef TOYBOX_SYSTEM_TABLESPACE_H
 #define TOYBOX_SYSTEM_TABLESPACE_H
-
-typedef uint64_t table_id;
-
 namespace system_table {
 
 constexpr const char *SYSTEM_TABLESPACE_PATH = "./toyboxsys";
@@ -26,7 +24,7 @@ constexpr const int MYF_THROUGH_ALL_ERRORS = 0;
 constexpr const int MAX_TABLE_ID_INITIAL_VALUE = 0;
 
 struct __attribute__ ((__packed__)) SystemTablespace {
-  table_id maxTableId;
+  tablespace_id maxTablespaceId;
 };
 
 class SystemTablespaceImpl {
@@ -34,10 +32,10 @@ class SystemTablespaceImpl {
   SystemTablespace systemTablespace;
  public:
   SystemTablespaceImpl() : systemTablespace(SystemTablespace{0}) {}
-  explicit SystemTablespaceImpl(table_id tableId)
-      : systemTablespace(SystemTablespace{tableId}) {}
-  void incrementMaxTableId();
-  table_id getMaxTableId() const;
+  explicit SystemTablespaceImpl(tablespace_id tablespaceId)
+      : systemTablespace(SystemTablespace{tablespaceId}) {}
+  void incrementMaxTablespaceId();
+  tablespace_id getMaxTablespaceId() const;
   uchar *toBinary();
 };
 
@@ -48,7 +46,7 @@ class SystemTablespaceHandler {
  public:
   SystemTablespaceHandler();
   ~SystemTablespaceHandler() {}
-  table_id getNewMaxTableId();
+  tablespace_id getNewMaxTablespaceId();
   static void create();
 };
 }

@@ -289,5 +289,5 @@ class ha_toybox : public handler {
 
   void insert_to_page(uchar *record);
 
-  table_id getNewMaxTableId();
+  tablespace_id getNewMaxTablespaceId();
 };
