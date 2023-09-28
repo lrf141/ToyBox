@@ -48,7 +48,6 @@
 #include "thr_lock.h"    /* THR_LOCK, THR_LOCK_DATA */
 
 #include "bufpool.h"
-#include "file.h"
 #include "sql_string.h"
 #include "system_tablespace.h"
 #include "tablespace.h"
@@ -64,6 +63,7 @@ class Toybox_share : public Handler_share {
   THR_LOCK lock;
   // example: [database name]/[table name].[ext]
   char tablespacePath[FN_REFLEN];
+  tablespace_id tablespaceId;
 
   Toybox_share();
   ~Toybox_share() override {
@@ -78,9 +78,8 @@ class ha_toybox : public handler {
   THR_LOCK_DATA lock;          ///< MySQL lock
   Toybox_share *share;        ///< Shared lock info
   Toybox_share *get_share();  ///< Get the share
-  uint32_t table_scan_now_cur = 0;
-  uint32_t page_scan_now_cur = 0;
-  uint32_t page_row_scan_now_cur = 0;
+  uint64_t page_scan_now_cur = 0;
+  uint64_t page_row_scan_now_cur = 0;
 
  public:
   ha_toybox(handlerton *hton, TABLE_SHARE *table_arg);

@@ -103,11 +103,12 @@
 #include "file_util.h"
 #include "my_dbug.h"
 #include "mysql/psi/mysql_memory.h"
+#include "page.h"
 #include "sql/field.h"
 #include "sql/sql_class.h"
 #include "sql/sql_plugin.h"
-#include "typelib.h"
 #include "tablespace_type.h"
+#include "typelib.h"
 
 extern PSI_file_key tablespace_key;
 extern PSI_file_key system_tablespace_key;
@@ -281,6 +282,9 @@ int ha_toybox::open(const char *name, int, uint, const dd::Table *) {
   if (!(share = get_share())) return 1;
   thr_lock_data_init(&share->lock, &lock, nullptr);
 
+  tablespace::TablespaceHandler tablespaceHandler = tablespace::TablespaceHandler(tablespacePath);
+  share->tablespaceId = tablespaceHandler.getTablespaceHeader().getId();
+
   strcpy(share->tablespacePath, tablespacePath);
   return 0;
 }
@@ -353,9 +357,6 @@ int ha_toybox::write_row(uchar *buf) {
 
 void ha_toybox::insert_to_page(uchar *record) {
 
-  tablespace::TablespaceHandler tablespaceHandler = tablespace::TablespaceHandler(share->tablespacePath);
-  uint64_t tablespaceId = tablespaceHandler.getTablespaceHeader().getId();
-
   // skip null bitmap (first 1 byte)
   record = (record + 1);
   uint32_t columnSize = 0;
@@ -376,9 +377,12 @@ void ha_toybox::insert_to_page(uchar *record) {
       insertPos += dataLength;
     }
   }
-  bufPool->write(fixedLengthBuf, columnSize, tablespaceId,
-                 tablespaceHandler.getTablespaceHeader().getPageCount(),
-                 tablespaceHandler.getFileDescriptor());
+  buf::WriteDescriptor writeDescriptor{
+      share->tablespaceId,
+      page_scan_now_cur,
+      share->tablespacePath
+  };
+  bufPool->write(fixedLengthBuf, writeDescriptor);
   free(fixedLengthBuf);
 }
 
@@ -524,7 +528,6 @@ int ha_toybox::index_last(uchar *) {
 */
 int ha_toybox::rnd_init(bool) {
   DBUG_TRACE;
-  table_scan_now_cur = 0;
   page_scan_now_cur = 0;
   page_row_scan_now_cur = 0;
   return 0;
@@ -553,16 +556,12 @@ int ha_toybox::rnd_end() {
 int ha_toybox::rnd_next(uchar *buf) {
   DBUG_TRACE;
 
-  tablespace::TablespaceHandler tablespaceHandler = tablespace::TablespaceHandler(share->tablespacePath);
+  // page_scan_now_cur = 今見ている pageId
+  // page_row_scan_now_cur = 今見ている page 内の tuple cursor
 
-  uint64_t tableId = tablespaceHandler.getTablespaceHeader().getId();
-
-  if (tablespaceHandler.getTablespaceHeader().getPageCount() == page_scan_now_cur) {
-    Page *page = TableFileImpl::readPage(tablespaceHandler.getFileDescriptor(),
-                                         page_scan_now_cur);
-    uint32_t tupleCount = page->pageHeader.tupleCount;
-    free(page);
-    if (tupleCount == page_row_scan_now_cur) {
+  if (bufPool->isLastPage(share->tablespaceId, page_scan_now_cur, share->tablespacePath)) {
+    if (bufPool->isLastTuple(share->tablespaceId, page_scan_now_cur,
+                             page_row_scan_now_cur, share->tablespacePath)) {
       return HA_ERR_END_OF_FILE;
     }
   }
@@ -577,10 +576,15 @@ int ha_toybox::rnd_next(uchar *buf) {
   }
 
   uchar *tupleBuf = (uchar *)calloc(sizeof(uchar), fixedSize);
+  buf::ReadDescriptor readDescriptor{
+      share->tablespaceId,
+      page_scan_now_cur,
+      page_row_scan_now_cur,
+      share->tablespacePath,
+  };
   // read fix size columns
-  bufPool->read(tupleBuf, fixedSize, table_scan_now_cur + 1, tableId,
-                page_scan_now_cur,
-                tablespaceHandler.getFileDescriptor());
+  // この時点で tupleBuf に入っている値がおかしい
+  bufPool->read(tupleBuf, readDescriptor);
 
   int fieldCount = 0;
   for (Field **field = table->field; *field; field++) {
@@ -592,13 +596,13 @@ int ha_toybox::rnd_next(uchar *buf) {
   tmp_restore_column_map(table->write_set, org_bitmap);
   free(tupleBuf);
 
-  if (!bufPool->hasNextTuple(0, tableId, page_scan_now_cur)) {
+  if (bufPool->isLastTuple(share->tablespaceId, page_scan_now_cur,
+                           page_row_scan_now_cur, share->tablespacePath)) {
     page_scan_now_cur++;
     page_row_scan_now_cur = 0;
   } else {
     page_row_scan_now_cur++;
   }
-  table_scan_now_cur++;
 
   return 0;
 }
@@ -920,8 +924,8 @@ int ha_toybox::create(const char *name, TABLE *, HA_CREATE_INFO *,
 
   strcpy(get_share()->tablespacePath, tablespacePath);
 
-  size_t pageSize = TableFileImpl::reservePage(newTablespaceHandler.getFileDescriptor(), 0);
-  assert(pageSize == PAGE_SIZE);
+  page::PageHandler pageHandler = page::PageHandler::reserveNewPage(0);
+  pageHandler.flush(newTablespaceHandler.getFileDescriptor());
 
   mysql_mutex_unlock(&toybox_system_table_lock);
 

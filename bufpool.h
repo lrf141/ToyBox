@@ -3,46 +3,69 @@
 
 #include <stdlib.h>
 
-#include "table_file.h"
 #include "page.h"
+#include "page_type.h"
+#include "tablespace_type.h"
 #include "sql/psi_memory_key.h"
 #include "my_inttypes.h"
 
 namespace buf {
 
+struct PageDescriptor {
+  tablespace_id tablespaceId;
+  page_id pageId;
+  char *tablespacePath;
+};
+
+struct ReadDescriptor {
+  tablespace_id tablespaceId;
+  page_id pageId;
+  uint64_t tupleId;
+  char *tablespacePath;
+};
+
+struct WriteDescriptor {
+  tablespace_id tablespaceId;
+  page_id pageId;
+  char *tablespacePath;
+};
+
 struct Element {
   uint64_t tableSpaceId;
   uint64_t refCount;
-  Page *page;
+  page::PageHandler pageHandler;
   Element *next;
+  Element(tablespace_id tablespaceId, page::PageHandler page)
+      : tableSpaceId(tablespaceId),
+        refCount(0),
+        pageHandler(page),
+        next(nullptr) {}
+  page::PageHandler& getPageHandler() {
+    return pageHandler;
+  }
 };
 
 typedef struct Element Element;
 
 class BufPool {
  private:
-  uint64_t pageCount = 0;
   uint64_t maxPageCount;
-  void readFromFile(File fd, uint64_t tableId, uint32_t pageId);
-  Page *get(uint64_t tableId, uint32_t pageId);
+  void readFromFile(tablespace_id tablespaceId, page_id pageId,
+                    const char *tablespacePath);
   void releaseAllPage();
  public:
   Element *elements = nullptr;
-  Page *pages;
   void init_buffer_pool(PSI_memory_key buf, int bufPoolSize);
   void deinit_buffer_pool();
-  void write(uchar *buf, uint32_t size, uint64_t tableId, uint32_t pageId, File fd);
-  void read(uchar *buf, uint32_t size, int tupleId, int tableId, int pageId, File fd);
-  void flush(File fd, Page *page, uint32_t pageId);
-  bool hasNextTuple(uint32_t tupleId, uint64_t tableId, int pageId);
-
-  // Visible for Testing
-  void read_fixed_size_part(uchar *buf, uint32_t size, int position, Page* page);
-  void write_fixed_size_part(uchar *buf, uint32_t size, int position, Page *page);
-  int getReadFixedPartPosition(int tupleCount, int size);
-  int getWriteFixedPartPosition(int beforeInsertTupleCount, int size);
-  bool existPage(uint64_t tableId, uint32_t pageId);
+  void read(uchar *buf, ReadDescriptor readDescriptor);
+  void write(uchar *buf, WriteDescriptor writeDescriptor);
+  Element* getElement(tablespace_id tablespaceId, page_id pageId);
+  bool isLastPage(tablespace_id tablespaceId, page_id pageId, const char *tablespacePath);
+  bool isLastTuple(tablespace_id tablespaceId, page_id pageId, uint64_t tupleId, const char *tablespacePath);
+  bool existPage(tablespace_id tablespaceId, page_id pageId) const;
+  Element *getLastElement() const;
 };
+
 }
 
 #endif  // MYSQL_BUFFER_H

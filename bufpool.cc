@@ -1,7 +1,10 @@
 #include "bufpool.h"
-#include "file_util.h"
 #include "my_sys.h"
 #include "mysql/service_mysql_alloc.h"
+#include "page.h"
+#include "tablespace.h"
+#include <iostream>
+
 
 void buf::BufPool::init_buffer_pool(PSI_memory_key, int bufPoolSize) {
   this->maxPageCount = bufPoolSize;
@@ -23,116 +26,129 @@ void buf::BufPool::releaseAllPage() {
   }
 }
 
-void buf::BufPool::write(uchar *buf, uint32_t size, uint64_t tableId, uint32_t pageId, File fd) {
-  if (!existPage(tableId, pageId)) {
-    readFromFile(fd, tableId, pageId);
+void buf::BufPool::readFromFile(tablespace_id tablespaceId, page_id pageId,
+                                const char *tablespacePath) {
+  tablespace::TablespaceHandler tablespaceHandler =
+      tablespace::TablespaceHandler(tablespacePath);
+  page::PageHandler pageHandler = page::PageHandler(pageId);
+  pageHandler.read(tablespaceHandler.getFileDescriptor());
+
+  Element *newElement = new Element(tablespaceId, pageHandler);
+  Element *lastElement = getLastElement();
+  if (lastElement == nullptr) {
+    this->elements = newElement;
+  } else {
+    lastElement->next = newElement;
   }
-
-  Page *page = get(tableId, pageId);
-  assert(page != nullptr);
-
-  uint32_t beforeInsertTupleCount = page->pageHeader.tupleCount;
-  int insertPosition = getWriteFixedPartPosition(beforeInsertTupleCount, size);
-  write_fixed_size_part(buf, size, insertPosition, page);
-  page->pageHeader.tupleCount++;
-  flush(fd, page, pageId);
 }
 
-void buf::BufPool::flush(File fd, Page *page, uint32_t pageId) {
-  FileUtil::seek(fd, 0
-                     + 16
-                     + 4096 + (PAGE_SIZE * pageId),
-                 MY_SEEK_SET,
-                 MYF(0)
-  );
-  uchar *buf = (uchar *)page;
-  FileUtil::write(fd, buf, PAGE_SIZE);
-}
-
-void buf::BufPool::write_fixed_size_part(uchar *buf, uint32_t size, int position, Page *page) {
-  memcpy((page->body + position), buf, size);
-}
-
-void buf::BufPool::read(uchar *buf, uint32_t size, int tupleCount, int tableId, int pageId, File fd) {
-  if (!existPage(tableId, pageId)) {
-    // read from File
-    readFromFile(fd, tableId, pageId);
+buf::Element *buf::BufPool::getLastElement() const {
+  Element *element = this->elements;
+  if (element == nullptr) {
+    return nullptr;
   }
-  int position = getReadFixedPartPosition(tupleCount, size);
-  Page *page = get(tableId, pageId);
-  read_fixed_size_part(buf, size, position, page);
+  while(element->next != nullptr) {
+    element = element->next;
+  }
+  return element;
 }
 
-void buf::BufPool::read_fixed_size_part(uchar *buf, uint32_t size, int position, Page *page) {
-  memcpy(buf, (page->body + position), size);
-}
-
-bool buf::BufPool::existPage(uint64_t tableId, uint32_t pageId) {
-  if(this->elements == nullptr) {
+bool buf::BufPool::existPage(tablespace_id tablespaceId, page_id pageId) const {
+  Element *element = this->elements;
+  bool exists = false;
+  if (element == nullptr) {
     return false;
   }
-
-  for(Element *element = this->elements; element != nullptr; element = element->next) {
-    if (element->tableSpaceId != tableId) {
-      continue;
+  while(true) {
+    if (element->tableSpaceId == tablespaceId &&
+        element->getPageHandler().getPageHeader().id == pageId) {
+      exists = true;
+      break;
     }
-    if (element->page->pageHeader.page_id == pageId) {
-      return true;
+    if (element->next == nullptr) {
+      break;
     }
+    element = element->next;
   }
-
-  return false;
+  return exists;
 }
 
-bool buf::BufPool::hasNextTuple(uint32_t tupleId, uint64_t tableId, int pageId) {
-  Page *page = get(tableId, pageId);
-  if (page == nullptr) {
-    return false;
+buf::Element *buf::BufPool::getElement(tablespace_id tablespaceId,
+                                       page_id pageId) {
+  Element *element = this->elements;
+  if (element == nullptr) {
+    return nullptr;
   }
-  return page->pageHeader.tupleCount > tupleId;
-}
-
-Page *buf::BufPool::get(uint64_t tableId, uint32_t pageId) {
-  for (Element *element = this->elements; element != nullptr; element = elements->next) {
-    if (element->tableSpaceId == tableId && element->page->pageHeader.page_id == pageId) {
-      element->refCount++;
-      return element->page;
+  while(true) {
+    if (element->tableSpaceId == tablespaceId &&
+        element->getPageHandler().getPageHeader().id == pageId) {
+      return element;
     }
+    if (element->next == nullptr) {
+      break;
+    }
+    element = element->next;
   }
   return nullptr;
 }
 
-void buf::BufPool::readFromFile(File fd, uint64_t  tableId, uint32_t pageId) {
-  Page *page = TableFileImpl::readPage(fd, pageId);
-  Element *element = elements;
+void buf::BufPool::read(uchar *buf, buf::ReadDescriptor readDescriptor) {
+  tablespace_id tablespaceId = readDescriptor.tablespaceId;
+  page_id pageId = readDescriptor.pageId;
 
-  if (elements == nullptr) {
-    Element *newElement = (Element *)malloc(sizeof(Element));
-    newElement->next = nullptr;
-    newElement->refCount = 0;
-    newElement->tableSpaceId = tableId;
-    newElement->page = page;
-    elements = newElement;
-    return;
+  if(!existPage(tablespaceId, pageId)) {
+    readFromFile(tablespaceId, pageId, readDescriptor.tablespacePath);
   }
 
-  while(element->next != nullptr) {
-    element = element->next;
+  Element *targetElement = getElement(tablespaceId, pageId);
+  assert(targetElement != nullptr);
+
+  page::PageHandler pageHandler = targetElement->getPageHandler();
+  uchar *body = pageHandler.getPage().getPage().body;
+  // TODO: calc columnSize
+  int columnSize = 4;
+  body = body + columnSize * readDescriptor.tupleId;
+  for (int i = 0; i < columnSize; i++) {
+    *(buf + i) = *(body + i);
+  }
+}
+
+void buf::BufPool::write(uchar *buf, buf::WriteDescriptor writeDescriptor) {
+  tablespace_id tablespaceId = writeDescriptor.tablespaceId;
+  page_id pageId = writeDescriptor.pageId;
+
+  if(!existPage(tablespaceId, pageId)) {
+    readFromFile(tablespaceId, pageId, writeDescriptor.tablespacePath);
   }
 
-  Element *newElement = (Element *)malloc(sizeof(Element));
-  newElement->next = nullptr;
-  newElement->refCount = 0;
-  newElement->tableSpaceId = tableId;
-  newElement->page = page;
+  Element *targetElement = getElement(tablespaceId, pageId);
+  assert(targetElement != nullptr);
 
-  element->next = newElement;
+  page::PageHandler& pageHandler = targetElement->getPageHandler();
+  uchar *body = pageHandler.getPage().getPage().body;
+  uint64_t lastTupleId = pageHandler.getPage().getPage().header.tupleCount;
+  // TODO: calc columnSize
+  int columnSize = 4;
+  for (int i = 0; i < columnSize; i++) {
+    *((body + lastTupleId * columnSize) + i) = *(buf + i);
+  }
+  pageHandler.getPage().incrementTupleCount();
 }
 
-int buf::BufPool::getWriteFixedPartPosition(int beforeInsertTupleCount, int size) {
-  return PAGE_BODY_SIZE - (beforeInsertTupleCount * size) - size;
+bool buf::BufPool::isLastPage(tablespace_id tablespaceId, page_id pageId,
+                               const char *tablespacePath) {
+  if(!existPage(tablespaceId, pageId)) {
+    readFromFile(tablespaceId, pageId, tablespacePath);
+  }
+  Element *cursor = getElement(tablespaceId, pageId);
+  return cursor->getPageHandler().getPage().getNextPageId() == UINT64_MAX;
 }
 
-int buf::BufPool::getReadFixedPartPosition(int tupleCount, int size) {
-  return PAGE_BODY_SIZE - (tupleCount * size);
+bool buf::BufPool::isLastTuple(tablespace_id tablespaceId, page_id pageId,
+                                uint64_t tupleId, const char *tablespacePath) {
+  if(!existPage(tablespaceId, pageId)) {
+    readFromFile(tablespaceId, pageId, tablespacePath);
+  }
+  Element *cursor = getElement(tablespaceId, pageId);
+  return cursor->getPageHandler().getPageHeader().tupleCount == tupleId;
 }

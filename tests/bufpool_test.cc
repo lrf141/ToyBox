@@ -5,96 +5,171 @@
 class BufPoolTest : public testing::Test {
  protected:
   buf::BufPool *sut;
-  Page *page;
 
   void SetUp() override {
     sut = new buf::BufPool();
-    page = (Page *)calloc(PAGE_SIZE, sizeof(uchar));
-    page->pageHeader.page_id = 0;
   }
 
   void TearDown() override {
     sut->deinit_buffer_pool();
     delete sut;
-    free(page);
-
     sut = nullptr;
-    page = nullptr;
   }
 };
 
-TEST_F(BufPoolTest, readFixedSizePart) {
+TEST_F(BufPoolTest, isLastPage) {
   // Setup
-  uchar result[4];
-  uint32_t readSize = 4; // byte
-  int tupleCount = 1;
-
-  // Initialize 4 bytes from the end
-  for (int i = PAGE_BODY_SIZE - static_cast<int>(readSize); i < PAGE_BODY_SIZE; i++) {
-    page->body[i] = 1;
-  }
-  int readPosition = PAGE_BODY_SIZE - (tupleCount * readSize);
+  tablespace_id tablespaceId = 1;
+  page_id pageId = 1;
+  page::PageHandler pageHandler = page::PageHandler(pageId);
+  sut->elements = new buf::Element(tablespaceId, pageHandler);
 
   // Exercise
-  sut->read_fixed_size_part(result, readSize, readPosition, page);
+  bool isLastPage = sut->isLastPage(tablespaceId, pageId, "hoge");
 
   // Verify
-  int i = 0;
-  for (; i < PAGE_BODY_SIZE - static_cast<int>(readSize); i++) {
-    ASSERT_EQ(page->body[i], 0);
-  }
-  for (; i < PAGE_BODY_SIZE; i++) {
-    ASSERT_EQ(page->body[i], 1);
-  }
-  for (i = 0; i < static_cast<int>(readSize); i++) {
-    ASSERT_EQ(result[i], 1);
-  }
+  ASSERT_TRUE(isLastPage);
 }
 
-TEST_F(BufPoolTest, getWriteFixedPartPosition) {
+TEST_F(BufPoolTest, isLastPageWithMorePages) {
   // Setup
-  int beforeInsertTupleCount = 0;
-  int size = 4;
+  tablespace_id tablespaceId = 1;
+  page_id pageId = 1;
+  page::PageHandler pageHandler = page::PageHandler(pageId);
+  sut->elements = new buf::Element(tablespaceId, pageHandler);
+
+  page::PageHandler page = page::PageHandler(pageId + 1);
+  buf::Element *lastElement = new buf::Element(tablespaceId + 1, page);
+  sut->elements->next = lastElement;
 
   // Exercise
-  int res = sut->getWriteFixedPartPosition(beforeInsertTupleCount, size);
+  bool isLastPage = sut->isLastPage(tablespaceId + 1, pageId + 1, "dummy");
 
   // Verify
-  ASSERT_EQ(res, PAGE_BODY_SIZE - 4);
+  ASSERT_TRUE(isLastPage);
 }
 
-TEST_F(BufPoolTest, getReadFixedPartPosition) {
+TEST_F(BufPoolTest, isLastTuple) {
   // Setup
-  int tupleCount = 1;
-  int size = 4;
+  tablespace_id tablespaceId = 1;
+  page_id pageId = 1;
+  uint64_t tupleId = 1;
+  page::PageHandler pageHandler = page::PageHandler(pageId);
+  pageHandler.getPageHeader().tupleCount = tupleId;
+  sut->elements = new buf::Element(tablespaceId, pageHandler);
 
   // Exercise
-  int res = sut->getReadFixedPartPosition(tupleCount, size);
+  bool isLastTuple = sut->isLastTuple(tablespaceId, pageId, tupleId, "hoge");
 
   // Verify
-  ASSERT_EQ(res, PAGE_BODY_SIZE - size);
+  ASSERT_TRUE(isLastTuple);
 }
 
-TEST_F(BufPoolTest, existPageWithNoElements) {
-  // Exercise and Verify
-  ASSERT_EQ(sut->existPage(0, 0), false);
+TEST_F(BufPoolTest, getElementWithEmptyElements) {
+  // Exercise
+  buf::Element *element = sut->getElement(1, 1);
+
+  // Verify
+  ASSERT_EQ(element, nullptr);
+}
+
+TEST_F(BufPoolTest, getElement) {
+  // Setup
+  tablespace_id tablespaceId = 1;
+  page_id pageId = 1;
+  uint64_t tupleId = 1;
+  page::PageHandler pageHandler = page::PageHandler(pageId);
+  pageHandler.getPageHeader().tupleCount = tupleId;
+  sut->elements = new buf::Element(tablespaceId, pageHandler);
+
+  // Exercise
+  buf::Element *element = sut->getElement(tablespaceId, pageId);
+
+  // Verify
+  ASSERT_NE(element, nullptr);
+  ASSERT_EQ(element->next, nullptr);
+  ASSERT_EQ(element->tableSpaceId, tablespaceId);
+  ASSERT_EQ(element->refCount, 0);
+  ASSERT_EQ(element->getPageHandler().getPageHeader().id, pageId);
+}
+
+TEST_F(BufPoolTest, existPageWithEmptyElements) {
+  // Exercise
+  bool existPage = sut->existPage(1, 1);
+
+  // Verify
+  ASSERT_FALSE(existPage);
 }
 
 TEST_F(BufPoolTest, existPage) {
   // Setup
-  uint64_t tableId = 1;
-  uint32_t pageId = 1;
-  page->pageHeader.page_id = pageId;
-  buf::Element *newElement = (buf::Element *)malloc(sizeof(buf::Element));
-  newElement->next = nullptr;
-  newElement->refCount = 0;
-  newElement->tableSpaceId = tableId;
-  newElement->page = page;
-  sut->elements = newElement;
+  tablespace_id tablespaceId = 1;
+  page_id pageId = 1;
+  uint64_t tupleId = 1;
+  page::PageHandler pageHandler = page::PageHandler(pageId);
+  pageHandler.getPageHeader().tupleCount = tupleId;
+  sut->elements = new buf::Element(tablespaceId, pageHandler);
 
-  // Exercise and Verify
-  ASSERT_EQ(sut->existPage(1, 1), true);
-  ASSERT_EQ(sut->existPage(0, 0), false);
-  ASSERT_EQ(sut->existPage(1, 0), false);
-  ASSERT_EQ(sut->existPage(0, 1), false);
+  // Exercise
+  bool existPage = sut->existPage(tablespaceId, pageId);
+  bool existPageNoMatchTablespaceId = sut->existPage(tablespaceId + 1, pageId);
+  bool existPageNoMatchPageId = sut->existPage(tablespaceId, pageId + 1);
+
+  // Verify
+  ASSERT_TRUE(existPage);
+  ASSERT_FALSE(existPageNoMatchTablespaceId);
+  ASSERT_FALSE(existPageNoMatchPageId);
+}
+
+TEST_F(BufPoolTest, write) {
+  // Setup
+  tablespace_id tablespaceId = 1;
+  page_id pageId = 1;
+  uchar buf[] = {1, 1, 1, 1};
+  char tablespacePath[] = "dummy";
+  page::PageHandler pageHandler = page::PageHandler(pageId);
+  sut->elements = new buf::Element(tablespaceId, pageHandler);
+  buf::WriteDescriptor writeDescriptor{tablespaceId, pageId, tablespacePath};
+
+  // Exercise
+  sut->write(buf, writeDescriptor);
+
+  // Verify
+  ASSERT_EQ(sut->elements->getPageHandler().getPageHeader().tupleCount, 1);
+  int i = 0;
+  for(; i < 4; i++) {
+    ASSERT_EQ(sut->elements->getPageHandler().getPageBody()[i], 1);
+  }
+  for (; i < page::PAGE_BODY_SIZE; i++) {
+    ASSERT_EQ(sut->elements->getPageHandler().getPageBody()[i], 0);
+  }
+}
+
+TEST_F(BufPoolTest, writeAndRead) {
+  // Setup
+  tablespace_id tablespaceId = 1;
+  page_id pageId = 1;
+  uint64_t tupleId = 0;
+  uchar buf[] = {1, 1, 1, 1};
+  uchar readBuf[] = {0, 0, 0, 0};
+  char tablespacePath[] = "dummy";
+  page::PageHandler pageHandler = page::PageHandler(pageId);
+  sut->elements = new buf::Element(tablespaceId, pageHandler);
+  buf::WriteDescriptor writeDescriptor{tablespaceId, pageId, tablespacePath};
+  buf::ReadDescriptor readDescriptor{tablespaceId, pageId, tupleId, tablespacePath};
+  sut->write(buf, writeDescriptor);
+
+  // Exercise
+  sut->read(readBuf, readDescriptor);
+
+  // Verify
+  ASSERT_EQ(sut->elements->getPageHandler().getPageHeader().tupleCount, 1);
+  int i = 0;
+  for(; i < 4; i++) {
+    ASSERT_EQ(readBuf[i], 1);
+    ASSERT_EQ(sut->elements->getPageHandler().getPageBody()[i], 1);
+  }
+  for (; i < page::PAGE_BODY_SIZE; i++) {
+    ASSERT_EQ(sut->elements->getPageHandler().getPageBody()[i], 0);
+  }
 }
