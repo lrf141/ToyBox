@@ -3,10 +3,10 @@ ADD_DEFINITIONS(-DMYSQL_SERVER)
 
 SET(TOYBOX_SRC
         ha_toybox.cc ha_toybox.h
-        file_util.cc file_util.h
-        bufpool.cc bufpool.h
+        util/file_util.cc
+        buf/bufpool.cc
         system/system_tablespace.cc
-        file_handler.cc
+        file/file_handler.cc
         tablespace/tablespace.cc
         page/page.cc
         )
