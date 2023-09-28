@@ -39,6 +39,7 @@
 */
 
 #include <sys/types.h>
+#include <cinttypes>
 
 #include "my_base.h" /* ha_rows */
 #include "my_compiler.h"
@@ -47,9 +48,9 @@
 #include "thr_lock.h"    /* THR_LOCK, THR_LOCK_DATA */
 
 #include "bufpool.h"
-#include "file.h"
 #include "sql_string.h"
-#include "system_table.h"
+#include "system_tablespace.h"
+#include "tablespace.h"
 
 #define PLUGIN_AUTHOR_ME "lrf141"
 
@@ -60,12 +61,10 @@
 class Toybox_share : public Handler_share {
  public:
   THR_LOCK lock;
-  File tableFile;
-  TableSpaceHeader *tableSpaceHeader;
-  SystemPageHeader *systemPageHeader;
-
   // example: [database name]/[table name].[ext]
-  char tableFilePath[FN_REFLEN];
+  char tablespacePath[FN_REFLEN];
+  tablespace_id tablespaceId;
+
   Toybox_share();
   ~Toybox_share() override {
     thr_lock_delete(&lock);
@@ -79,9 +78,8 @@ class ha_toybox : public handler {
   THR_LOCK_DATA lock;          ///< MySQL lock
   Toybox_share *share;        ///< Shared lock info
   Toybox_share *get_share();  ///< Get the share
-  uint32_t table_scan_now_cur = 0;
-  uint32_t page_scan_now_cur = 0;
-  uint32_t page_row_scan_now_cur = 0;
+  uint64_t page_scan_now_cur = 0;
+  uint64_t page_row_scan_now_cur = 0;
 
  public:
   ha_toybox(handlerton *hton, TABLE_SHARE *table_arg);
@@ -289,4 +287,6 @@ class ha_toybox : public handler {
       enum thr_lock_type lock_type) override;  ///< required
 
   void insert_to_page(uchar *record);
+
+  tablespace_id getNewMaxTablespaceId();
 };

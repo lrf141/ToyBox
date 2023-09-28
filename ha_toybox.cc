@@ -97,22 +97,21 @@
 #include <iostream>
 
 #include "storage/toybox/ha_toybox.h"
-#include "toybox_errorno.h"
 
 #include "file_util.h"
 #include "my_dbug.h"
 #include "mysql/psi/mysql_memory.h"
+#include "page.h"
 #include "sql/field.h"
 #include "sql/sql_class.h"
 #include "sql/sql_plugin.h"
-#include "table_file.h"
 #include "typelib.h"
 
-static PSI_file_key key_file_data;
-static PSI_file_key key_file_system;
+extern PSI_file_key tablespace_key;
+extern PSI_file_key system_tablespace_key;
 static PSI_file_info all_toybox_files[] = {
-    {&key_file_data, "data", 0, 0, PSI_DOCUMENT_ME},
-    {&key_file_system, "system", 0, 0, PSI_DOCUMENT_ME}
+    {&tablespace_key, "data", 0, 0, PSI_DOCUMENT_ME},
+    {&system_tablespace_key, "system", 0, 0, PSI_DOCUMENT_ME}
 };
 
 static PSI_memory_key buffer_pool_key;
@@ -168,17 +167,7 @@ static int toybox_init_func(void *p) {
 
   mysql_mutex_init(key_mutex_toybox_system, &toybox_system_table_lock, MY_MUTEX_INIT_FAST);
 
-  File fd = SystemTableImpl::open(key_file_system);
-  if (fd < 0) {
-    // does not exists SystemTableFile
-    SystemTableImpl::close(fd);
-    File systemTableFile = SystemTableImpl::create(key_file_system);
-    SystemTable *systemTable = (SystemTable *)malloc(sizeof(SystemTable));
-    systemTable->maxTableId = 0;
-    SystemTableImpl::write(systemTableFile, (uchar *)systemTable);
-    SystemTableImpl::close(systemTableFile);
-  }
-  SystemTableImpl::close(fd);
+  system_table::SystemTablespaceHandler::create();
 
   return 0;
 }
@@ -284,26 +273,16 @@ static bool toybox_is_supported_system_table(const char *db,
 int ha_toybox::open(const char *name, int, uint, const dd::Table *) {
   DBUG_TRACE;
 
-  File tableFile;
-  char tableFilePath[FN_REFLEN];
-  FileUtil::convertToTableFilePath(tableFilePath, name, ".json");
+  char tablespacePath[FN_REFLEN];
+  FileUtil::convertToTableFilePath(tablespacePath, name, tablespace::FILE_EXT);
 
   if (!(share = get_share())) return 1;
   thr_lock_data_init(&share->lock, &lock, nullptr);
 
-  tableFile = TableFileImpl::open(key_file_data, tableFilePath);
-  if (tableFile < 0) {
-    return CANNOT_OPEN_TABLE_FILE;
-  }
-  share->tableFile = tableFile;
-  strcpy(share->tableFilePath, tableFilePath);
+  tablespace::TablespaceHandler tablespaceHandler = tablespace::TablespaceHandler(tablespacePath);
+  share->tablespaceId = tablespaceHandler.getTablespaceHeader().getId();
 
-  TableSpaceHeader *tableSpaceHeader = TableFileImpl::readTableSpaceHeader(tableFile);
-  share->tableSpaceHeader = tableSpaceHeader;
-
-  SystemPageHeader *systemPageHeader = TableFileImpl::readSystemPageHeader(tableFile);
-  share->systemPageHeader = systemPageHeader;
-
+  strcpy(share->tablespacePath, tablespacePath);
   return 0;
 }
 
@@ -324,7 +303,7 @@ int ha_toybox::open(const char *name, int, uint, const dd::Table *) {
 
 int ha_toybox::close(void) {
   DBUG_TRACE;
-  return TableFileImpl::close(get_share()->tableFile);
+  return 0;
 }
 
 /**
@@ -375,8 +354,6 @@ int ha_toybox::write_row(uchar *buf) {
 
 void ha_toybox::insert_to_page(uchar *record) {
 
-  uint64_t tableId = get_share()->tableSpaceHeader->tableSpaceId;
-
   // skip null bitmap (first 1 byte)
   record = (record + 1);
   uint32_t columnSize = 0;
@@ -397,7 +374,12 @@ void ha_toybox::insert_to_page(uchar *record) {
       insertPos += dataLength;
     }
   }
-  bufPool->write(fixedLengthBuf, columnSize, tableId, share->tableSpaceHeader->pageCount, share->tableFile);
+  buf::WriteDescriptor writeDescriptor{
+      share->tablespaceId,
+      page_scan_now_cur,
+      share->tablespacePath
+  };
+  bufPool->write(fixedLengthBuf, writeDescriptor);
   free(fixedLengthBuf);
 }
 
@@ -543,7 +525,6 @@ int ha_toybox::index_last(uchar *) {
 */
 int ha_toybox::rnd_init(bool) {
   DBUG_TRACE;
-  table_scan_now_cur = 0;
   page_scan_now_cur = 0;
   page_row_scan_now_cur = 0;
   return 0;
@@ -572,13 +553,12 @@ int ha_toybox::rnd_end() {
 int ha_toybox::rnd_next(uchar *buf) {
   DBUG_TRACE;
 
-  uint64_t tableId = share->tableSpaceHeader->tableSpaceId;
+  // page_scan_now_cur = 今見ている pageId
+  // page_row_scan_now_cur = 今見ている page 内の tuple cursor
 
-  if (share->tableSpaceHeader->pageCount == page_scan_now_cur) {
-    Page *page = TableFileImpl::readPage(share->tableFile, page_scan_now_cur);
-    uint32_t tupleCount = page->pageHeader.tupleCount;
-    free(page);
-    if (tupleCount == page_row_scan_now_cur) {
+  if (bufPool->isLastPage(share->tablespaceId, page_scan_now_cur, share->tablespacePath)) {
+    if (bufPool->isLastTuple(share->tablespaceId, page_scan_now_cur,
+                             page_row_scan_now_cur, share->tablespacePath)) {
       return HA_ERR_END_OF_FILE;
     }
   }
@@ -593,8 +573,15 @@ int ha_toybox::rnd_next(uchar *buf) {
   }
 
   uchar *tupleBuf = (uchar *)calloc(sizeof(uchar), fixedSize);
+  buf::ReadDescriptor readDescriptor{
+      share->tablespaceId,
+      page_scan_now_cur,
+      page_row_scan_now_cur,
+      share->tablespacePath,
+  };
   // read fix size columns
-  bufPool->read(tupleBuf, fixedSize, table_scan_now_cur + 1, tableId, page_scan_now_cur, share->tableFile);
+  // この時点で tupleBuf に入っている値がおかしい
+  bufPool->read(tupleBuf, readDescriptor);
 
   int fieldCount = 0;
   for (Field **field = table->field; *field; field++) {
@@ -606,13 +593,13 @@ int ha_toybox::rnd_next(uchar *buf) {
   tmp_restore_column_map(table->write_set, org_bitmap);
   free(tupleBuf);
 
-  if (!bufPool->hasNextTuple(0, tableId, page_scan_now_cur)) {
+  if (bufPool->isLastTuple(share->tablespaceId, page_scan_now_cur,
+                           page_row_scan_now_cur, share->tablespacePath)) {
     page_scan_now_cur++;
     page_row_scan_now_cur = 0;
   } else {
     page_row_scan_now_cur++;
   }
-  table_scan_now_cur++;
 
   return 0;
 }
@@ -832,12 +819,12 @@ int ha_toybox::delete_table(const char *from, const dd::Table *) {
   // from variable is path to table file.
   // ex) ./[database name]/[table file]
   DBUG_TRACE;
-  char tableFilePath[FN_REFLEN];
-  FileUtil::convertToTableFilePath(tableFilePath, from, ".json");
-  int err = TableFileImpl::remove(key_file_data, tableFilePath);
-  if (err != 0) {
-    return CANNOT_DELETE_TABLE_FILE;
-  }
+  char tablespacePath[FN_REFLEN];
+  FileUtil::convertToTableFilePath(tablespacePath, from, tablespace::FILE_EXT);
+
+  tablespace::TablespaceHandler tablespaceHandler = tablespace::TablespaceHandler(tablespacePath);
+  tablespaceHandler.remove();
+
   return 0;
 }
 
@@ -909,71 +896,42 @@ static MYSQL_THDVAR_UINT(create_count_thdvar, 0, nullptr, nullptr, nullptr, 0,
  * @param name ex) './[db name]/[tbl name]' without ext
  * @return
  */
-int ha_toybox::create(const char *name, TABLE *form, HA_CREATE_INFO *,
+int ha_toybox::create(const char *name, TABLE *, HA_CREATE_INFO *,
                        dd::Table *) {
   DBUG_TRACE;
   mysql_mutex_lock(&toybox_system_table_lock);
   THD *thd = this->ha_thd();
   // FN_REFLEN is max table path size
-  char tableFilePath[FN_REFLEN];
-  File newTableFile;
+  char tablespacePath[FN_REFLEN];
 
-  FileUtil::convertToTableFilePath(tableFilePath, name, ".json");
+  FileUtil::convertToTableFilePath(tablespacePath, name, tablespace::FILE_EXT);
 
-  // Open System Table
-  File systemTableFile = SystemTableImpl::open(key_file_system);
-  if (systemTableFile < 0) {
-    return HA_ERR_CRASHED;
-  }
-  SystemTable *systemTable = SystemTableImpl::read(systemTableFile);
-  uint64_t maxTableId = systemTable->maxTableId++;
-  SystemTableImpl::write(systemTableFile, (uchar *)systemTable);
-  SystemTableImpl::close(systemTableFile);
+  // Get new max tableId
+  tablespace_id maxTablespaceId = getNewMaxTablespaceId();
 
   // TRUNCATE TABLE
   if (thd_sql_command(thd) == SQLCOM_TRUNCATE) {
-    newTableFile = TableFileImpl::truncate(key_file_data, tableFilePath);
-    if (newTableFile < 0) {
-      return -1;
-    }
-  } else {
-    // CREATE TABLE
-    newTableFile = TableFileImpl::create(key_file_data, tableFilePath);
-    if (newTableFile < 0) {
-      return -1;
-    }
+    tablespace::TablespaceHandler oldTablespace =
+        tablespace::TablespaceHandler(tablespacePath);
+    oldTablespace.remove();
   }
-  strcpy(get_share()->tableFilePath, tableFilePath);
+  // CREATE TABLE
+  tablespace::TablespaceHandler newTablespaceHandler =
+      tablespace::TablespaceHandler::create(tablespacePath, maxTablespaceId);
 
-  // create table space part
-  TableSpaceHeader tableSpaceHeader{};
-  tableSpaceHeader.tableSpaceId = maxTableId;
-  tableSpaceHeader.pageCount = 0;
-  size_t tableSpaceHeaderSize = TableFileImpl::writeTableSpaceHeader(newTableFile, tableSpaceHeader);
-  assert(tableSpaceHeaderSize == TABLE_SPACE_HEADER_SIZE);
+  strcpy(get_share()->tablespacePath, tablespacePath);
 
-  // reserve SystemPage Area
-  size_t systemPageSize = TableFileImpl::reserveSystemPage(newTableFile);
-  assert(systemPageSize == SYSTEM_PAGE_SIZE);
+  page::PageHandler pageHandler = page::PageHandler::reserveNewPage(0);
+  pageHandler.flush(newTablespaceHandler.getFileDescriptor());
 
-  // create system page header part
-  SystemPageHeader systemPageHeader{};
-  int columnCount = 0;
-  for (Field **field = form->s->field; *field; field++) {
-    columnCount++;
-  }
-  systemPageHeader.pageId = SYSTEM_PAGE_ID;
-  systemPageHeader.columnCount = columnCount;
-  size_t systemPageHeaderSize = TableFileImpl::writeSystemPageHeader(newTableFile, systemPageHeader);
-  assert(systemPageHeaderSize == SYSTEM_PAGE_HEADER_SIZE);
-
-  size_t pageSize = TableFileImpl::reservePage(newTableFile, 0);
-  assert(pageSize == PAGE_SIZE);
-
-  int err = TableFileImpl::close(newTableFile);
   mysql_mutex_unlock(&toybox_system_table_lock);
 
-  return err;
+  return 0;
+}
+
+tablespace_id ha_toybox::getNewMaxTablespaceId() {
+  system_table::SystemTablespaceHandler systemTablespaceHandler;
+  return systemTablespaceHandler.getNewMaxTablespaceId();
 }
 
 struct st_mysql_storage_engine toybox_storage_engine = {

@@ -29,6 +29,14 @@ mysql-server/storage/toybox$ cd ../../build/mysql-test
 mysql-server/build/mysql-test$ ./mtr --suite toybox
 ```
 
+### Run with rr-debugger
+```bash
+mysql-server/storage/toybox$ sudo sysctl -w kernel.perf_event_paranoid=1
+mysql-server/storage/toybox$ ./mtr/setup-test.sh
+mysql-server/storage/toybox$ cd ../../build/mysql-test
+mysql-server/build/mysql-test$ ./mtr --suite toybox --rr
+```
+
 ### (Optional) Run unit test
 ```
 mysql-server/build$ ./runtime_output_directory/toybox_tests 
