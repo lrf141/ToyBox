@@ -3,7 +3,6 @@
 //
 #include "system_tablespace.h"
 #include <cassert>
-#include <memory>
 
 PSI_file_key system_tablespace_key;
 

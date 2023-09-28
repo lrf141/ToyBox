@@ -3,7 +3,6 @@
 #include "mysql/service_mysql_alloc.h"
 #include "page.h"
 #include "tablespace.h"
-#include <iostream>
 
 
 void buf::BufPool::init_buffer_pool(PSI_memory_key, int bufPoolSize) {

@@ -95,10 +95,8 @@
 #include <mysql/psi/mysql_file.h>
 #include <algorithm>
 #include <iostream>
-#include <memory>
 
 #include "storage/toybox/ha_toybox.h"
-#include "toybox_errorno.h"
 
 #include "file_util.h"
 #include "my_dbug.h"
@@ -107,7 +105,6 @@
 #include "sql/field.h"
 #include "sql/sql_class.h"
 #include "sql/sql_plugin.h"
-#include "tablespace_type.h"
 #include "typelib.h"
 
 extern PSI_file_key tablespace_key;
