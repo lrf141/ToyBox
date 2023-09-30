@@ -102,7 +102,7 @@ void buf::BufPool::read(uchar *buf, buf::ReadDescriptor readDescriptor) {
   Element *targetElement = getElement(tablespaceId, pageId);
   assert(targetElement != nullptr);
 
-  page::PageHandler pageHandler = targetElement->getPageHandler();
+  page::PageHandler& pageHandler = targetElement->getPageHandler();
   uchar *body = pageHandler.getPage().getPage().body;
   // TODO: calc columnSize
   int columnSize = 4;
