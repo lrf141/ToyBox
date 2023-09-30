@@ -11,12 +11,6 @@
 
 namespace buf {
 
-struct PageDescriptor {
-  tablespace_id tablespaceId;
-  page_id pageId;
-  char *tablespacePath;
-};
-
 struct ReadDescriptor {
   tablespace_id tablespaceId;
   page_id pageId;
