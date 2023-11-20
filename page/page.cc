@@ -19,7 +19,7 @@ void PageHandler::flush(file_handler::FileDescriptor fd) {
   assert(writeSize == PAGE_SIZE);
 }
 
-void PageHandler::read(file_handler::FileDescriptor fd) {
+void PageHandler::readFromFile(file_handler::FileDescriptor fd) {
   FileUtil::seek(fd, PAGE_START_POSITION + page.getPageId() * PAGE_SIZE,
                  SEEK_SET, MYF(file_config::MYF_STRICT_MODE));
   size_t readSize = FileUtil::read(fd, page.toBinary(), PAGE_SIZE);

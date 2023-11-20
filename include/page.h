@@ -77,7 +77,7 @@ class PageHandler {
   explicit PageHandler(page_id pageId) : page(PageImpl(pageId)) {}
   static PageHandler reserveNewPage(page_id maxPageId);
   void flush(file_handler::FileDescriptor fd);
-  void read(file_handler::FileDescriptor fd);
+  void readFromFile(file_handler::FileDescriptor fd);
   void insert(tuple::Tuple t);
   PageImpl& getPage() {
     return page;

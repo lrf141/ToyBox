@@ -30,7 +30,7 @@ void buf::BufPool::readFromFile(tablespace_id tablespaceId, page_id pageId,
   tablespace::TablespaceHandler tablespaceHandler =
       tablespace::TablespaceHandler(tablespacePath);
   page::PageHandler pageHandler = page::PageHandler(pageId);
-  pageHandler.read(tablespaceHandler.getFileDescriptor());
+  pageHandler.readFromFile(tablespaceHandler.getFileDescriptor());
 
   Element *newElement = new Element(tablespaceId, pageHandler);
   Element *lastElement = getLastElement();
