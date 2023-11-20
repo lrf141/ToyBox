@@ -8,6 +8,7 @@
 #include "tablespace_type.h"
 #include "sql/psi_memory_key.h"
 #include "my_inttypes.h"
+#include "tuple.h"
 
 namespace buf {
 
@@ -22,6 +23,7 @@ struct WriteDescriptor {
   tablespace_id tablespaceId;
   page_id pageId;
   char *tablespacePath;
+  tuple::Tuple *tuple;
 };
 
 struct Element {

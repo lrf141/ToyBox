@@ -2,8 +2,9 @@
 // Created by lrf141 on 9/25/23.
 //
 #include "page.h"
-#include "file_util.h"
+#include <iostream>
 #include "file_config.h"
+#include "file_util.h"
 
 namespace page {
 
@@ -23,6 +24,23 @@ void PageHandler::read(file_handler::FileDescriptor fd) {
                  SEEK_SET, MYF(file_config::MYF_STRICT_MODE));
   size_t readSize = FileUtil::read(fd, page.toBinary(), PAGE_SIZE);
   assert(readSize == PAGE_SIZE);
+}
+
+void PageHandler::insert(tuple::Tuple t) {
+  page::Header &header = page.getHeader();
+  uint32_t tupleSize = t.getSize();
+  uint8_t *tupleData = t.getData();
+  page::Slot newSlot = Slot{
+      header.freeEnd - tupleSize,
+      tupleSize
+  };
+  // TODO: page split
+  memcpy((page.getPage().body + header.freeBegin),
+         reinterpret_cast<uchar *>(&newSlot), page::SLOT_SIZE);
+  memcpy((page.getPage().body + header.freeEnd - tupleSize),
+         tupleData, tupleSize);
+  header.freeBegin += page::SLOT_SIZE;
+  header.freeEnd -= tupleSize;
 }
 
 } // namespace page

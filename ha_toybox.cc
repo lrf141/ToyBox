@@ -354,14 +354,16 @@ int ha_toybox::write_row(uchar *buf) {
 
 void ha_toybox::insert_to_page(uchar *record) {
 
-  // skip null bitmap (first 1 byte)
-  record = (record + 1);
-  uint32_t columnSize = 0;
+  // first byte is null bitmap
+  uint8_t nullBitmap = *(record + 0);
+  uint32_t recordSize = 0;
   for (Field **field = table->field; *field; field++) {
-    columnSize += (*field)->data_length();
+    recordSize += (*field)->data_length();
   }
 
-  uchar *fixedLengthBuf = (uchar *)calloc(sizeof(uchar), columnSize);
+  uchar *fixedLengthBuf = (uchar *)calloc(sizeof(uchar), recordSize);
+  std::unique_ptr<tuple::Tuple> insertTuple(new tuple::Tuple(recordSize, nullBitmap));
+  record = (record + 1);
 
   int insertPos = 0;
   for (Field **field = table->field; *field; field++) {
@@ -377,7 +379,8 @@ void ha_toybox::insert_to_page(uchar *record) {
   buf::WriteDescriptor writeDescriptor{
       share->tablespaceId,
       page_scan_now_cur,
-      share->tablespacePath
+      share->tablespacePath,
+      insertTuple.get()
   };
   bufPool->write(fixedLengthBuf, writeDescriptor);
   free(fixedLengthBuf);

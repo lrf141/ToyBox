@@ -127,9 +127,10 @@ TEST_F(BufPoolTest, write) {
   page_id pageId = 1;
   uchar buf[] = {1, 1, 1, 1};
   char tablespacePath[] = "dummy";
+  tuple::Tuple *newTuple = new tuple::Tuple(4, 0);
   page::PageHandler pageHandler = page::PageHandler(pageId);
   sut->elements = new buf::Element(tablespaceId, pageHandler);
-  buf::WriteDescriptor writeDescriptor{tablespaceId, pageId, tablespacePath};
+  buf::WriteDescriptor writeDescriptor{tablespaceId, pageId, tablespacePath, newTuple};
 
   // Exercise
   sut->write(buf, writeDescriptor);
@@ -153,9 +154,10 @@ TEST_F(BufPoolTest, writeAndRead) {
   uchar buf[] = {1, 1, 1, 1};
   uchar readBuf[] = {0, 0, 0, 0};
   char tablespacePath[] = "dummy";
+  tuple::Tuple *newTuple = new tuple::Tuple(4, 0);
   page::PageHandler pageHandler = page::PageHandler(pageId);
   sut->elements = new buf::Element(tablespaceId, pageHandler);
-  buf::WriteDescriptor writeDescriptor{tablespaceId, pageId, tablespacePath};
+  buf::WriteDescriptor writeDescriptor{tablespaceId, pageId, tablespacePath, newTuple};
   buf::ReadDescriptor readDescriptor{tablespaceId, pageId, tupleId, tablespacePath};
   sut->write(buf, writeDescriptor);
 
