@@ -127,7 +127,7 @@ TEST_F(BufPoolTest, write) {
   page_id pageId = 1;
   uchar buf[] = {1, 1, 1, 1};
   char tablespacePath[] = "dummy";
-  tuple::Tuple *newTuple = new tuple::Tuple(4, 0);
+  tuple::Tuple *newTuple = new tuple::Tuple(4, 0, buf);
   page::PageHandler pageHandler = page::PageHandler(pageId);
   sut->elements = new buf::Element(tablespaceId, pageHandler);
   buf::WriteDescriptor writeDescriptor{tablespaceId, pageId, tablespacePath, newTuple};
@@ -136,14 +136,10 @@ TEST_F(BufPoolTest, write) {
   sut->write(buf, writeDescriptor);
 
   // Verify
-  ASSERT_EQ(sut->elements->getPageHandler().getPageHeader().tupleCount, 1);
-  int i = 0;
-  for(; i < 4; i++) {
-    ASSERT_EQ(sut->elements->getPageHandler().getPageBody()[i], 1);
-  }
-  for (; i < page::PAGE_BODY_SIZE; i++) {
-    ASSERT_EQ(sut->elements->getPageHandler().getPageBody()[i], 0);
-  }
+  page::Header header = sut->elements->getPageHandler().getPageHeader();
+  ASSERT_EQ(header.tupleCount, 1);
+  ASSERT_EQ(header.freeBegin, page::SLOT_SIZE);
+  ASSERT_EQ(header.freeEnd, page::PAGE_BODY_SIZE - 4);
 }
 
 TEST_F(BufPoolTest, writeAndRead) {
@@ -154,7 +150,7 @@ TEST_F(BufPoolTest, writeAndRead) {
   uchar buf[] = {1, 1, 1, 1};
   uchar readBuf[] = {0, 0, 0, 0};
   char tablespacePath[] = "dummy";
-  tuple::Tuple *newTuple = new tuple::Tuple(4, 0);
+  tuple::Tuple *newTuple = new tuple::Tuple(4, 0, buf);
   page::PageHandler pageHandler = page::PageHandler(pageId);
   sut->elements = new buf::Element(tablespaceId, pageHandler);
   buf::WriteDescriptor writeDescriptor{tablespaceId, pageId, tablespacePath, newTuple};
@@ -165,13 +161,11 @@ TEST_F(BufPoolTest, writeAndRead) {
   sut->read(readBuf, readDescriptor);
 
   // Verify
-  ASSERT_EQ(sut->elements->getPageHandler().getPageHeader().tupleCount, 1);
-  int i = 0;
-  for(; i < 4; i++) {
+  page::Header header = sut->elements->getPageHandler().getPageHeader();
+  ASSERT_EQ(header.tupleCount, 1);
+  ASSERT_EQ(header.freeBegin, page::SLOT_SIZE);
+  ASSERT_EQ(header.freeEnd, page::PAGE_BODY_SIZE - 4);
+  for (int i = 0; i < 4; i++) {
     ASSERT_EQ(readBuf[i], 1);
-    ASSERT_EQ(sut->elements->getPageHandler().getPageBody()[i], 1);
-  }
-  for (; i < page::PAGE_BODY_SIZE; i++) {
-    ASSERT_EQ(sut->elements->getPageHandler().getPageBody()[i], 0);
   }
 }

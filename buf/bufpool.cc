@@ -103,16 +103,11 @@ void buf::BufPool::read(uchar *buf, buf::ReadDescriptor readDescriptor) {
   assert(targetElement != nullptr);
 
   page::PageHandler& pageHandler = targetElement->getPageHandler();
-  uchar *body = pageHandler.getPage().getPage().body;
-  // TODO: calc columnSize
-  int columnSize = 4;
-  body = body + columnSize * readDescriptor.tupleId;
-  for (int i = 0; i < columnSize; i++) {
-    *(buf + i) = *(body + i);
-  }
+  tuple::Tuple tuple = pageHandler.readTuple(readDescriptor.tupleId);
+  memcpy(buf, tuple.getData(), tuple.getSize());
 }
 
-void buf::BufPool::write(uchar *buf, buf::WriteDescriptor writeDescriptor) {
+void buf::BufPool::write(uchar *, buf::WriteDescriptor writeDescriptor) {
   tablespace_id tablespaceId = writeDescriptor.tablespaceId;
   page_id pageId = writeDescriptor.pageId;
 
@@ -124,13 +119,7 @@ void buf::BufPool::write(uchar *buf, buf::WriteDescriptor writeDescriptor) {
   assert(targetElement != nullptr);
 
   page::PageHandler& pageHandler = targetElement->getPageHandler();
-  uchar *body = pageHandler.getPage().getPage().body;
-  uint64_t lastTupleId = pageHandler.getPage().getPage().header.tupleCount;
-  // TODO: calc columnSize
-  int columnSize = 4;
-  for (int i = 0; i < columnSize; i++) {
-    *((body + lastTupleId * columnSize) + i) = *(buf + i);
-  }
+  pageHandler.insert(*writeDescriptor.tuple);
   pageHandler.getPage().incrementTupleCount();
 }
 

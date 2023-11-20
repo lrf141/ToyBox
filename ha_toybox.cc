@@ -583,7 +583,6 @@ int ha_toybox::rnd_next(uchar *buf) {
       share->tablespacePath,
   };
   // read fix size columns
-  // この時点で tupleBuf に入っている値がおかしい
   bufPool->read(tupleBuf, readDescriptor);
 
   int fieldCount = 0;
