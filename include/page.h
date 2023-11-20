@@ -78,6 +78,7 @@ class PageHandler {
   static PageHandler reserveNewPage(page_id maxPageId);
   void flush(file_handler::FileDescriptor fd);
   void readFromFile(file_handler::FileDescriptor fd);
+  tuple::Tuple readTuple(uint64_t tupleId);
   void insert(tuple::Tuple t);
   PageImpl& getPage() {
     return page;

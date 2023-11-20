@@ -43,4 +43,11 @@ void PageHandler::insert(tuple::Tuple t) {
   header.freeEnd -= tupleSize;
 }
 
+tuple::Tuple PageHandler::readTuple(uint64_t tupleId) {
+  page::Slot targetSlot = *reinterpret_cast<Slot *>
+                          (page.getPage().body + SLOT_SIZE * tupleId);
+  uchar *tupleBody = static_cast<uchar *>(page.getPage().body + targetSlot.recordStartOffset);
+  return tuple::Tuple(targetSlot.size, 0, tupleBody);
+}
+
 } // namespace page

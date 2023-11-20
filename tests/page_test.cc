@@ -39,3 +39,20 @@ TEST_F(PageTest, insert) {
     ASSERT_EQ(*(sut->getPageBody() + i), 1);
   }
 }
+
+TEST_F(PageTest, readTuple) {
+  // Setup
+  std::unique_ptr<uint8_t> tupleBody(new uint8_t[]{1, 1, 1, 1, 1, 1, 1, 1});
+  uint32_t tupleSize = 8;
+  tuple::Tuple insertTuple = tuple::Tuple(tupleSize, 0, tupleBody.get());
+  sut->insert(insertTuple);
+
+  // Exercise
+  tuple::Tuple res = sut->readTuple(0);
+
+  // Verify
+  ASSERT_EQ(res.getSize(), 8);
+  for (int i = 0; i < static_cast<int>(tupleSize); i++) {
+    ASSERT_EQ(*(res.getData() + i), 1);
+  }
+}
