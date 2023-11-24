@@ -1,6 +1,6 @@
-<mxfile host="app.diagrams.net" modified="2023-09-25T13:54:36.070Z" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36" etag="ET1KFSsy0rX8bNjMEi6-" version="21.8.2" type="device">
+<mxfile host="app.diagrams.net" modified="2023-11-24T20:07:32.148Z" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36" etag="-u9fFb17z3-ETHi7A6YY" version="21.8.2" type="device">
   <diagram name="ページ1" id="qp1X_snr1Usr0zYjhWub">
-    <mxGraphModel dx="1434" dy="830" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2339" pageHeight="3300" background="#ffffff" math="0" shadow="0">
+    <mxGraphModel dx="1674" dy="830" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2339" pageHeight="3300" background="#ffffff" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -81,57 +81,23 @@
         <mxCell id="JxwGZU3mzutddpgpnhln-29" value="Include Page Count (8 byte)" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="1030" y="260" width="280" height="40" as="geometry" />
         </mxCell>
-        <mxCell id="PwUVfdEYxXC1_0HfYMqG-4" value="Page Header (Fixed: 16 byte)" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="390" y="550" width="280" height="40" as="geometry" />
-        </mxCell>
-        <mxCell id="PwUVfdEYxXC1_0HfYMqG-13" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="PwUVfdEYxXC1_0HfYMqG-8" target="-ohf0zvCfowjIAaDjrN5-1" edge="1">
+        <mxCell id="BIQ0YDIfCynrvnvvxBxt-10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="PwUVfdEYxXC1_0HfYMqG-4" target="HwRXT1nWVoz5UTMhd5PL-2">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="PwUVfdEYxXC1_0HfYMqG-18" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="PwUVfdEYxXC1_0HfYMqG-8" target="PwUVfdEYxXC1_0HfYMqG-14" edge="1">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="1040" y="770" />
-              <mxPoint x="1040" y="680" />
-            </Array>
-          </mxGeometry>
+        <mxCell id="PwUVfdEYxXC1_0HfYMqG-4" value="Page Header (Fixed: 24 byte)" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="390" y="550" width="280" height="40" as="geometry" />
         </mxCell>
-        <mxCell id="PwUVfdEYxXC1_0HfYMqG-8" value="Tuple #1" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+        <mxCell id="PwUVfdEYxXC1_0HfYMqG-8" value="Record #1 (follow the MySQL row format)" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="390" y="750" width="280" height="40" as="geometry" />
         </mxCell>
-        <mxCell id="PwUVfdEYxXC1_0HfYMqG-9" value="Tuple #2" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="390" y="710" width="280" height="40" as="geometry" />
-        </mxCell>
-        <mxCell id="PwUVfdEYxXC1_0HfYMqG-10" value="Variable Length Value #1.N&lt;br&gt;Using Row Format" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+        <mxCell id="PwUVfdEYxXC1_0HfYMqG-10" value="Slot #1 (8 byte)" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="390" y="590" width="280" height="40" as="geometry" />
         </mxCell>
-        <mxCell id="PwUVfdEYxXC1_0HfYMqG-12" value="Fixed Length Column Data&lt;br&gt;(depends on column data size, Using Row Format)" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="750" y="660" width="280" height="40" as="geometry" />
-        </mxCell>
-        <mxCell id="PwUVfdEYxXC1_0HfYMqG-14" value="Data Size (4byte)" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="1070" y="660" width="280" height="40" as="geometry" />
-        </mxCell>
-        <mxCell id="PwUVfdEYxXC1_0HfYMqG-17" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0;entryDx=0;entryDy=0;" parent="1" source="PwUVfdEYxXC1_0HfYMqG-16" target="PwUVfdEYxXC1_0HfYMqG-10" edge="1">
+        <mxCell id="PwUVfdEYxXC1_0HfYMqG-20" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;endArrow=none;endFill=0;dashed=1;dashPattern=8 8;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="PwUVfdEYxXC1_0HfYMqG-10" edge="1" target="PwUVfdEYxXC1_0HfYMqG-8">
           <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="1370" y="720" />
-              <mxPoint x="1370" y="590" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="PwUVfdEYxXC1_0HfYMqG-16" value="Offset (4byte)&lt;br&gt;Relative offset within Page" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="1070" y="700" width="280" height="40" as="geometry" />
-        </mxCell>
-        <mxCell id="PwUVfdEYxXC1_0HfYMqG-19" value="Variable Length Value #2.N&lt;br&gt;Using Row Format" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="390" y="630" width="280" height="40" as="geometry" />
-        </mxCell>
-        <mxCell id="PwUVfdEYxXC1_0HfYMqG-20" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;endArrow=none;endFill=0;dashed=1;dashPattern=8 8;" parent="1" source="PwUVfdEYxXC1_0HfYMqG-19" edge="1">
-          <mxGeometry relative="1" as="geometry">
-            <mxPoint x="760" y="810" as="sourcePoint" />
+            <mxPoint x="530" y="670" as="sourcePoint" />
             <mxPoint x="530" y="710" as="targetPoint" />
           </mxGeometry>
-        </mxCell>
-        <mxCell id="-ohf0zvCfowjIAaDjrN5-1" value="isNull (1 byte)" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="750" y="620" width="280" height="40" as="geometry" />
         </mxCell>
         <mxCell id="Hjp2I9B02VDTlfhVk1Wn-2" value="&lt;div style=&quot;text-align: left;&quot;&gt;&lt;b style=&quot;background-color: initial;&quot;&gt;System Table&lt;/b&gt;&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
           <mxGeometry x="10" y="850" width="100" height="30" as="geometry" />
@@ -148,26 +114,38 @@
             <mxPoint x="160" y="1010" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="HwRXT1nWVoz5UTMhd5PL-1" value="" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-          <mxGeometry x="730" y="440" width="280" height="80" as="geometry" />
+        <mxCell id="HwRXT1nWVoz5UTMhd5PL-1" value="" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="950" y="490" width="280" height="80" as="geometry" />
         </mxCell>
-        <mxCell id="HwRXT1nWVoz5UTMhd5PL-4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="HwRXT1nWVoz5UTMhd5PL-2" target="PwUVfdEYxXC1_0HfYMqG-4">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="700" y="460" />
-              <mxPoint x="700" y="490" />
-              <mxPoint x="530" y="490" />
-            </Array>
-          </mxGeometry>
+        <mxCell id="HwRXT1nWVoz5UTMhd5PL-2" value="Page ID (8 byte)&amp;nbsp; = 0" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="950" y="490" width="280" height="40" as="geometry" />
         </mxCell>
-        <mxCell id="HwRXT1nWVoz5UTMhd5PL-2" value="Page ID (8 byte)&amp;nbsp; = 0" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-          <mxGeometry x="730" y="440" width="280" height="40" as="geometry" />
+        <mxCell id="HwRXT1nWVoz5UTMhd5PL-3" value="Tuple Size (8 byte)" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="950" y="530" width="280" height="40" as="geometry" />
         </mxCell>
-        <mxCell id="HwRXT1nWVoz5UTMhd5PL-3" value="Tuple Size (8 byte)" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-          <mxGeometry x="730" y="480" width="280" height="40" as="geometry" />
+        <mxCell id="HwRXT1nWVoz5UTMhd5PL-5" value="Next Page ID (8 byte)" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="950" y="570" width="280" height="40" as="geometry" />
         </mxCell>
-        <mxCell id="HwRXT1nWVoz5UTMhd5PL-5" value="Next Page ID (8 byte)" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-          <mxGeometry x="730" y="520" width="280" height="40" as="geometry" />
+        <mxCell id="BIQ0YDIfCynrvnvvxBxt-1" value="Free begin offset (4 byte)" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="950" y="610" width="280" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="BIQ0YDIfCynrvnvvxBxt-2" value="Free end offset (4 byte)" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="950" y="650" width="280" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="BIQ0YDIfCynrvnvvxBxt-4" value="Record start offset (4 byte)" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="790" y="750" width="280" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="BIQ0YDIfCynrvnvvxBxt-5" value="Record size (4 byte)" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="790" y="790" width="280" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="BIQ0YDIfCynrvnvvxBxt-8" value="Free begin" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="670" y="620" width="80" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="BIQ0YDIfCynrvnvvxBxt-9" value="Free end" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="675" y="740" width="70" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="BIQ0YDIfCynrvnvvxBxt-12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.493;entryY=-0.15;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="PwUVfdEYxXC1_0HfYMqG-10" target="BIQ0YDIfCynrvnvvxBxt-4">
+          <mxGeometry relative="1" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
