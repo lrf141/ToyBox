@@ -340,9 +340,9 @@ int ha_toybox::close(void) {
   https://dev.mysql.com/doc/dev/mysql-server/latest/PAGE_TEMPTABLE_ROW_FORMAT.html
 */
 
-int ha_toybox::write_row(uchar *buf) {
+int ha_toybox::write_row(uchar *record) {
   DBUG_TRACE;
-  insert_to_page(buf);
+  insert_to_page(record);
   /*
     Example of a successful write_row. We don't store the data
     anywhere; they are thrown away. A real implementation will
@@ -553,7 +553,7 @@ int ha_toybox::rnd_end() {
   filesort.cc, records.cc, sql_handler.cc, sql_select.cc, sql_table.cc and
   sql_update.cc
 */
-int ha_toybox::rnd_next(uchar *buf) {
+int ha_toybox::rnd_next(uchar *record) {
   DBUG_TRACE;
 
   // page_scan_now_cur = 今見ている pageId
@@ -567,7 +567,7 @@ int ha_toybox::rnd_next(uchar *buf) {
   }
 
   my_bitmap_map *org_bitmap;
-  memset(buf, 0, table->s->null_bytes);
+  memset(record, 0, table->s->null_bytes);
   org_bitmap = tmp_use_all_columns(table, table->write_set);
 
   int fixedSize = 0;
@@ -584,7 +584,7 @@ int ha_toybox::rnd_next(uchar *buf) {
   };
   // read fix size columns
   int tupleSize = bufPool->read(tupleBuf, readDescriptor);
-  memcpy(buf + 1, tupleBuf, tupleSize);
+  memcpy(record + 1, tupleBuf, tupleSize);
 
   tmp_restore_column_map(table->write_set, org_bitmap);
   free(tupleBuf);
