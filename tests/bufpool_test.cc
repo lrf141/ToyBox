@@ -155,16 +155,17 @@ TEST_F(BufPoolTest, writeAndRead) {
   sut->elements = new buf::Element(tablespaceId, pageHandler);
   buf::WriteDescriptor writeDescriptor{tablespaceId, pageId, tablespacePath, newTuple};
   buf::ReadDescriptor readDescriptor{tablespaceId, pageId, tupleId, tablespacePath};
-  sut->write(buf, writeDescriptor);
 
   // Exercise
-  sut->read(readBuf, readDescriptor);
+  sut->write(buf, writeDescriptor);
+  int readSize = sut->read(readBuf, readDescriptor);
 
   // Verify
   page::Header header = sut->elements->getPageHandler().getPageHeader();
   ASSERT_EQ(header.tupleCount, 1);
   ASSERT_EQ(header.freeBegin, page::SLOT_SIZE);
   ASSERT_EQ(header.freeEnd, page::PAGE_BODY_SIZE - 4);
+  ASSERT_EQ(readSize, 4);
   for (int i = 0; i < 4; i++) {
     ASSERT_EQ(readBuf[i], 1);
   }

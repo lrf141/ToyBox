@@ -91,7 +91,7 @@ buf::Element *buf::BufPool::getElement(tablespace_id tablespaceId,
   return nullptr;
 }
 
-void buf::BufPool::read(uchar *buf, buf::ReadDescriptor readDescriptor) {
+int buf::BufPool::read(uchar *buf, buf::ReadDescriptor readDescriptor) {
   tablespace_id tablespaceId = readDescriptor.tablespaceId;
   page_id pageId = readDescriptor.pageId;
 
@@ -105,6 +105,7 @@ void buf::BufPool::read(uchar *buf, buf::ReadDescriptor readDescriptor) {
   page::PageHandler& pageHandler = targetElement->getPageHandler();
   tuple::Tuple tuple = pageHandler.readTuple(readDescriptor.tupleId);
   memcpy(buf, tuple.getData(), tuple.getSize());
+  return tuple.getSize();
 }
 
 void buf::BufPool::write(uchar *, buf::WriteDescriptor writeDescriptor) {

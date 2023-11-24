@@ -53,7 +53,7 @@ class BufPool {
   Element *elements = nullptr;
   void init_buffer_pool(PSI_memory_key buf, int bufPoolSize);
   void deinit_buffer_pool();
-  void read(uchar *buf, ReadDescriptor readDescriptor);
+  int read(uchar *buf, ReadDescriptor readDescriptor);
   void write(uchar *buf, WriteDescriptor writeDescriptor);
   Element* getElement(tablespace_id tablespaceId, page_id pageId);
   bool isLastPage(tablespace_id tablespaceId, page_id pageId, const char *tablespacePath);

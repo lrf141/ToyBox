@@ -362,7 +362,7 @@ void ha_toybox::insert_to_page(uchar *record) {
   }
 
   uchar *fixedLengthBuf = (uchar *)calloc(sizeof(uchar), recordSize);
-  std::unique_ptr<tuple::Tuple> insertTuple(new tuple::Tuple(recordSize, nullBitmap));
+  std::unique_ptr<tuple::Tuple> insertTuple(new tuple::Tuple(recordSize, nullBitmap, record + 1));
   record = (record + 1);
 
   int insertPos = 0;
@@ -575,7 +575,7 @@ int ha_toybox::rnd_next(uchar *buf) {
     fixedSize += (*field)->data_length();
   }
 
-  uchar *tupleBuf = (uchar *)calloc(sizeof(uchar), fixedSize);
+  uchar *tupleBuf = static_cast<uchar *>(calloc(sizeof(uchar), fixedSize));
   buf::ReadDescriptor readDescriptor{
       share->tablespaceId,
       page_scan_now_cur,
@@ -583,14 +583,8 @@ int ha_toybox::rnd_next(uchar *buf) {
       share->tablespacePath,
   };
   // read fix size columns
-  bufPool->read(tupleBuf, readDescriptor);
-
-  int fieldCount = 0;
-  for (Field **field = table->field; *field; field++) {
-    uint32 dataLength = (*field)->data_length();
-    memcpy((buf + 1 + (dataLength * fieldCount)), (tupleBuf + (dataLength * fieldCount)), dataLength);
-    fieldCount++;
-  }
+  int tupleSize = bufPool->read(tupleBuf, readDescriptor);
+  memcpy(buf + 1, tupleBuf, tupleSize);
 
   tmp_restore_column_map(table->write_set, org_bitmap);
   free(tupleBuf);
