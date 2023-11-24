@@ -211,7 +211,7 @@ class ha_toybox : public handler {
     We implement this in ha_toybox.cc. It's not an obligatory method;
     skip it and and MySQL will treat it as not implemented.
   */
-  int write_row(uchar *buf) override;
+  int write_row(uchar *record) override;
 
   /** @brief
     We implement this in ha_toybox.cc. It's not an obligatory method;
@@ -266,7 +266,7 @@ class ha_toybox : public handler {
   */
   int rnd_init(bool scan) override;  // required
   int rnd_end() override;
-  int rnd_next(uchar *buf) override;             ///< required
+  int rnd_next(uchar *record) override;             ///< required
   int rnd_pos(uchar *buf, uchar *pos) override;  ///< required
   void position(const uchar *record) override;   ///< required
   int info(uint) override;                       ///< required

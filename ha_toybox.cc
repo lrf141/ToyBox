@@ -340,9 +340,9 @@ int ha_toybox::close(void) {
   https://dev.mysql.com/doc/dev/mysql-server/latest/PAGE_TEMPTABLE_ROW_FORMAT.html
 */
 
-int ha_toybox::write_row(uchar *buf) {
+int ha_toybox::write_row(uchar *record) {
   DBUG_TRACE;
-  insert_to_page(buf);
+  insert_to_page(record);
   /*
     Example of a successful write_row. We don't store the data
     anywhere; they are thrown away. A real implementation will
@@ -354,14 +354,16 @@ int ha_toybox::write_row(uchar *buf) {
 
 void ha_toybox::insert_to_page(uchar *record) {
 
-  // skip null bitmap (first 1 byte)
-  record = (record + 1);
-  uint32_t columnSize = 0;
+  // first byte is null bitmap
+  uint8_t nullBitmap = *(record + 0);
+  uint32_t recordSize = 0;
   for (Field **field = table->field; *field; field++) {
-    columnSize += (*field)->data_length();
+    recordSize += (*field)->data_length();
   }
 
-  uchar *fixedLengthBuf = (uchar *)calloc(sizeof(uchar), columnSize);
+  uchar *fixedLengthBuf = (uchar *)calloc(sizeof(uchar), recordSize);
+  std::unique_ptr<tuple::Tuple> insertTuple(new tuple::Tuple(recordSize, nullBitmap, record + 1));
+  record = (record + 1);
 
   int insertPos = 0;
   for (Field **field = table->field; *field; field++) {
@@ -377,7 +379,8 @@ void ha_toybox::insert_to_page(uchar *record) {
   buf::WriteDescriptor writeDescriptor{
       share->tablespaceId,
       page_scan_now_cur,
-      share->tablespacePath
+      share->tablespacePath,
+      insertTuple.get()
   };
   bufPool->write(fixedLengthBuf, writeDescriptor);
   free(fixedLengthBuf);
@@ -550,7 +553,7 @@ int ha_toybox::rnd_end() {
   filesort.cc, records.cc, sql_handler.cc, sql_select.cc, sql_table.cc and
   sql_update.cc
 */
-int ha_toybox::rnd_next(uchar *buf) {
+int ha_toybox::rnd_next(uchar *record) {
   DBUG_TRACE;
 
   // page_scan_now_cur = 今見ている pageId
@@ -564,7 +567,7 @@ int ha_toybox::rnd_next(uchar *buf) {
   }
 
   my_bitmap_map *org_bitmap;
-  memset(buf, 0, table->s->null_bytes);
+  memset(record, 0, table->s->null_bytes);
   org_bitmap = tmp_use_all_columns(table, table->write_set);
 
   int fixedSize = 0;
@@ -572,7 +575,7 @@ int ha_toybox::rnd_next(uchar *buf) {
     fixedSize += (*field)->data_length();
   }
 
-  uchar *tupleBuf = (uchar *)calloc(sizeof(uchar), fixedSize);
+  uchar *tupleBuf = static_cast<uchar *>(calloc(sizeof(uchar), fixedSize));
   buf::ReadDescriptor readDescriptor{
       share->tablespaceId,
       page_scan_now_cur,
@@ -580,15 +583,8 @@ int ha_toybox::rnd_next(uchar *buf) {
       share->tablespacePath,
   };
   // read fix size columns
-  // この時点で tupleBuf に入っている値がおかしい
-  bufPool->read(tupleBuf, readDescriptor);
-
-  int fieldCount = 0;
-  for (Field **field = table->field; *field; field++) {
-    uint32 dataLength = (*field)->data_length();
-    memcpy((buf + 1 + (dataLength * fieldCount)), (tupleBuf + (dataLength * fieldCount)), dataLength);
-    fieldCount++;
-  }
+  int tupleSize = bufPool->read(tupleBuf, readDescriptor);
+  memcpy(record + 1, tupleBuf, tupleSize);
 
   tmp_restore_column_map(table->write_set, org_bitmap);
   free(tupleBuf);

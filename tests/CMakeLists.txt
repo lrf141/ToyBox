@@ -13,6 +13,7 @@ SET(TESTS
         system_tablespace_test.cc
         file_handler_test.cc
         tablespace_test.cc
+        page_test.cc
 )
 
 SET(ALL_TOYBOX_TESTS)

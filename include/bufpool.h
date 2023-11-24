@@ -8,14 +8,9 @@
 #include "tablespace_type.h"
 #include "sql/psi_memory_key.h"
 #include "my_inttypes.h"
+#include "tuple.h"
 
 namespace buf {
-
-struct PageDescriptor {
-  tablespace_id tablespaceId;
-  page_id pageId;
-  char *tablespacePath;
-};
 
 struct ReadDescriptor {
   tablespace_id tablespaceId;
@@ -28,6 +23,7 @@ struct WriteDescriptor {
   tablespace_id tablespaceId;
   page_id pageId;
   char *tablespacePath;
+  tuple::Tuple *tuple;
 };
 
 struct Element {
@@ -57,7 +53,7 @@ class BufPool {
   Element *elements = nullptr;
   void init_buffer_pool(PSI_memory_key buf, int bufPoolSize);
   void deinit_buffer_pool();
-  void read(uchar *buf, ReadDescriptor readDescriptor);
+  int read(uchar *buf, ReadDescriptor readDescriptor);
   void write(uchar *buf, WriteDescriptor writeDescriptor);
   Element* getElement(tablespace_id tablespaceId, page_id pageId);
   bool isLastPage(tablespace_id tablespaceId, page_id pageId, const char *tablespacePath);
