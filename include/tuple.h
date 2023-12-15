@@ -5,30 +5,29 @@
 #define TUPLE_TUPLE_H
 
 #include <cinttypes>
+#include <vector>
 
 namespace tuple {
 
 class Tuple {
  private:
-  uint32_t size;
   uint8_t nullBitmask;
-  uint8_t *data;
+  std::vector<uint8_t> data;
  public:
   Tuple(uint32_t size, uint8_t nullBitmask)
-      : size(size), nullBitmask(nullBitmask), data(new uint8_t[size]()) {}
+      : nullBitmask(nullBitmask), data(size) {}
   Tuple(uint32_t size, uint8_t nullBitmask, uint8_t *data)
-      : size(size), nullBitmask(nullBitmask), data((uint8_t *)calloc(size, sizeof(uchar))){
-    memcpy(this->data, data, size);
+      : nullBitmask(nullBitmask), data(size){
+    memcpy(this->data.data(), data, size);
   }
   ~Tuple() {
-    //free(data);
   }
   uint32_t getSize() {
-    return size;
+    return this->data.size();
   }
 
   uint8_t *getData() {
-    return data;
+    return this->data.data();
   }
 };
 

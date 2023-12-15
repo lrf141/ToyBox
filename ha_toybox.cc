@@ -95,6 +95,7 @@
 #include <mysql/psi/mysql_file.h>
 #include <algorithm>
 #include <iostream>
+#include <vector>
 
 #include "storage/toybox/ha_toybox.h"
 
@@ -361,7 +362,7 @@ void ha_toybox::insert_to_page(uchar *record) {
     recordSize += (*field)->data_length();
   }
 
-  uchar *fixedLengthBuf = (uchar *)calloc(sizeof(uchar), recordSize);
+  std::vector<uint8_t> fixedLengthBuf(recordSize);
   std::unique_ptr<tuple::Tuple> insertTuple(new tuple::Tuple(recordSize, nullBitmap, record + 1));
   record = (record + 1);
 
@@ -370,7 +371,7 @@ void ha_toybox::insert_to_page(uchar *record) {
     uint32 dataLength = (*field)->data_length();
     if (dataLength != 0) {
       // Fixed Size Column
-      memcpy(fixedLengthBuf + insertPos, record, dataLength);
+      memcpy(fixedLengthBuf.data() + insertPos, record, dataLength);
       // skip read binary position
       record = (record + dataLength);
       insertPos += dataLength;
@@ -382,8 +383,7 @@ void ha_toybox::insert_to_page(uchar *record) {
       share->tablespacePath,
       insertTuple.get()
   };
-  bufPool->write(fixedLengthBuf, writeDescriptor);
-  free(fixedLengthBuf);
+  bufPool->write(fixedLengthBuf.data(), writeDescriptor);
 }
 
 /**
@@ -558,7 +558,7 @@ int ha_toybox::rnd_next(uchar *record) {
 
   // page_scan_now_cur = 今見ている pageId
   // page_row_scan_now_cur = 今見ている page 内の tuple cursor
-
+  // TODO: 最後の tuple かどうかは slot をみて判断する
   if (bufPool->isLastPage(share->tablespaceId, page_scan_now_cur, share->tablespacePath)) {
     if (bufPool->isLastTuple(share->tablespaceId, page_scan_now_cur,
                              page_row_scan_now_cur, share->tablespacePath)) {
@@ -575,7 +575,7 @@ int ha_toybox::rnd_next(uchar *record) {
     fixedSize += (*field)->data_length();
   }
 
-  uchar *tupleBuf = static_cast<uchar *>(calloc(sizeof(uchar), fixedSize));
+  std::vector<uint8_t> tupleBuf(fixedSize);
   buf::ReadDescriptor readDescriptor{
       share->tablespaceId,
       page_scan_now_cur,
@@ -583,11 +583,10 @@ int ha_toybox::rnd_next(uchar *record) {
       share->tablespacePath,
   };
   // read fix size columns
-  int tupleSize = bufPool->read(tupleBuf, readDescriptor);
-  memcpy(record + 1, tupleBuf, tupleSize);
+  int tupleSize = bufPool->read(tupleBuf.data(), readDescriptor);
+  memcpy(record + 1, tupleBuf.data(), tupleSize);
 
   tmp_restore_column_map(table->write_set, org_bitmap);
-  free(tupleBuf);
 
   if (bufPool->isLastTuple(share->tablespaceId, page_scan_now_cur,
                            page_row_scan_now_cur, share->tablespacePath)) {
