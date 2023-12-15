@@ -54,8 +54,11 @@ TEST_F(BufPoolTest, isLastTuple) {
   tablespace_id tablespaceId = 1;
   page_id pageId = 1;
   uint64_t tupleId = 1;
+  uint8_t buf[] = {1, 1, 1, 1};
+  tuple::Tuple insertTuple{4, 0, buf};
   page::PageHandler pageHandler = page::PageHandler(pageId);
-  pageHandler.getPageHeader().tupleCount = tupleId;
+  pageHandler.getPageHeader().tupleCount = 1;
+  pageHandler.insert(insertTuple);
   sut->elements = new buf::Element(tablespaceId, pageHandler);
 
   // Exercise

@@ -88,6 +88,7 @@ class PageHandler {
   void readFromFile(file_handler::FileDescriptor fd);
   tuple::Tuple readTuple(uint64_t tupleId);
   void insert(tuple::Tuple t);
+  bool isLastTuple(uint64_t tupleCursor);
   PageImpl& getPage() {
     return page;
   }

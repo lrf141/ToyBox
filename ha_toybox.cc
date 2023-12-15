@@ -558,7 +558,6 @@ int ha_toybox::rnd_next(uchar *record) {
 
   // page_scan_now_cur = 今見ている pageId
   // page_row_scan_now_cur = 今見ている page 内の tuple cursor
-  // TODO: 最後の tuple かどうかは slot をみて判断する
   if (bufPool->isLastPage(share->tablespaceId, page_scan_now_cur, share->tablespacePath)) {
     if (bufPool->isLastTuple(share->tablespaceId, page_scan_now_cur,
                              page_row_scan_now_cur, share->tablespacePath)) {

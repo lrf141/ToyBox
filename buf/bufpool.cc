@@ -139,5 +139,5 @@ bool buf::BufPool::isLastTuple(tablespace_id tablespaceId, page_id pageId,
     readFromFile(tablespaceId, pageId, tablespacePath);
   }
   Element *cursor = getElement(tablespaceId, pageId);
-  return cursor->getPageHandler().getPageHeader().tupleCount == tupleId;
+  return cursor->getPageHandler().isLastTuple(tupleId);
 }

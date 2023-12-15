@@ -49,4 +49,9 @@ tuple::Tuple PageHandler::readTuple(uint64_t tupleId) {
   return tuple::Tuple(targetSlot.size, 0, tupleBody);
 }
 
+bool PageHandler::isLastTuple(uint64_t tupleCursor) {
+  page::Header &header = page.getHeader();
+  return header.freeBegin == tupleCursor * SLOT_SIZE;
+}
+
 } // namespace page
