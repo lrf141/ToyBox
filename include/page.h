@@ -68,6 +68,14 @@ class PageImpl {
   Page& getPage() {
     return page;
   }
+
+  page::Slot getSlot(uint64_t tupleId) {
+    return *reinterpret_cast<Slot *>(page.body + SLOT_SIZE * tupleId);
+  }
+
+  uchar *readTupleBySlot(page::Slot slot) {
+    return static_cast<uchar *>(page.body + slot.recordStartOffset);
+  }
 };
 
 class PageHandler {

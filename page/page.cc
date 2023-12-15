@@ -44,9 +44,8 @@ void PageHandler::insert(tuple::Tuple t) {
 }
 
 tuple::Tuple PageHandler::readTuple(uint64_t tupleId) {
-  page::Slot targetSlot = *reinterpret_cast<Slot *>
-                          (page.getPage().body + SLOT_SIZE * tupleId);
-  uchar *tupleBody = static_cast<uchar *>(page.getPage().body + targetSlot.recordStartOffset);
+  page::Slot targetSlot = page.getSlot(tupleId);
+  uchar *tupleBody = page.readTupleBySlot(targetSlot);
   return tuple::Tuple(targetSlot.size, 0, tupleBody);
 }
 
