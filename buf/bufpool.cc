@@ -103,7 +103,7 @@ int buf::BufPool::read(uchar *buf, buf::ReadDescriptor readDescriptor) {
   assert(targetElement != nullptr);
 
   page::PageHandler& pageHandler = targetElement->getPageHandler();
-  tuple::Tuple tuple = pageHandler.readTuple(readDescriptor.tupleId);
+  tuple::Tuple tuple = pageHandler.readTuple(readDescriptor.tupleCursor);
   memcpy(buf, tuple.getData(), tuple.getSize());
   return tuple.getSize();
 }

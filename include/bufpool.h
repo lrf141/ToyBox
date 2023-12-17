@@ -15,7 +15,7 @@ namespace buf {
 struct ReadDescriptor {
   tablespace_id tablespaceId;
   page_id pageId;
-  uint64_t tupleId;
+  uint64_t tupleCursor;
   char *tablespacePath;
 };
 
@@ -57,7 +57,7 @@ class BufPool {
   void write(uchar *buf, WriteDescriptor writeDescriptor);
   Element* getElement(tablespace_id tablespaceId, page_id pageId);
   bool isLastPage(tablespace_id tablespaceId, page_id pageId, const char *tablespacePath);
-  bool isLastTuple(tablespace_id tablespaceId, page_id pageId, uint64_t tupleId, const char *tablespacePath);
+  bool isLastTuple(tablespace_id tablespaceId, page_id pageId, uint64_t tupleCursor, const char *tablespacePath);
   bool existPage(tablespace_id tablespaceId, page_id pageId) const;
   Element *getLastElement() const;
 };

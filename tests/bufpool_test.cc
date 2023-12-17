@@ -53,7 +53,7 @@ TEST_F(BufPoolTest, isLastTuple) {
   // Setup
   tablespace_id tablespaceId = 1;
   page_id pageId = 1;
-  uint64_t tupleId = 1;
+  uint64_t tupleCursor = 1;
   uint8_t buf[] = {1, 1, 1, 1};
   tuple::Tuple insertTuple{4, 0, buf};
   page::PageHandler pageHandler = page::PageHandler(pageId);
@@ -62,7 +62,7 @@ TEST_F(BufPoolTest, isLastTuple) {
   sut->elements = new buf::Element(tablespaceId, pageHandler);
 
   // Exercise
-  bool isLastTuple = sut->isLastTuple(tablespaceId, pageId, tupleId, "hoge");
+  bool isLastTuple = sut->isLastTuple(tablespaceId, pageId, tupleCursor, "hoge");
 
   // Verify
   ASSERT_TRUE(isLastTuple);
@@ -80,9 +80,9 @@ TEST_F(BufPoolTest, getElement) {
   // Setup
   tablespace_id tablespaceId = 1;
   page_id pageId = 1;
-  uint64_t tupleId = 1;
+  uint64_t tupleCursor = 1;
   page::PageHandler pageHandler = page::PageHandler(pageId);
-  pageHandler.getPageHeader().tupleCount = tupleId;
+  pageHandler.getPageHeader().tupleCount = tupleCursor;
   sut->elements = new buf::Element(tablespaceId, pageHandler);
 
   // Exercise
@@ -108,9 +108,9 @@ TEST_F(BufPoolTest, existPage) {
   // Setup
   tablespace_id tablespaceId = 1;
   page_id pageId = 1;
-  uint64_t tupleId = 1;
+  uint64_t tupleCursor = 1;
   page::PageHandler pageHandler = page::PageHandler(pageId);
-  pageHandler.getPageHeader().tupleCount = tupleId;
+  pageHandler.getPageHeader().tupleCount = tupleCursor;
   sut->elements = new buf::Element(tablespaceId, pageHandler);
 
   // Exercise
@@ -149,7 +149,7 @@ TEST_F(BufPoolTest, writeAndRead) {
   // Setup
   tablespace_id tablespaceId = 1;
   page_id pageId = 1;
-  uint64_t tupleId = 0;
+  uint64_t tupleCursor = 0;
   uchar buf[] = {1, 1, 1, 1};
   uchar readBuf[] = {0, 0, 0, 0};
   char tablespacePath[] = "dummy";
@@ -157,7 +157,7 @@ TEST_F(BufPoolTest, writeAndRead) {
   page::PageHandler pageHandler = page::PageHandler(pageId);
   sut->elements = new buf::Element(tablespaceId, pageHandler);
   buf::WriteDescriptor writeDescriptor{tablespaceId, pageId, tablespacePath, newTuple};
-  buf::ReadDescriptor readDescriptor{tablespaceId, pageId, tupleId, tablespacePath};
+  buf::ReadDescriptor readDescriptor{tablespaceId, pageId, tupleCursor, tablespacePath};
 
   // Exercise
   sut->write(buf, writeDescriptor);

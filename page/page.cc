@@ -43,8 +43,8 @@ void PageHandler::insert(tuple::Tuple t) {
   header.freeEnd -= tupleSize;
 }
 
-tuple::Tuple PageHandler::readTuple(uint64_t tupleId) {
-  page::Slot targetSlot = page.getSlot(tupleId);
+tuple::Tuple PageHandler::readTuple(uint64_t tupleCursor) {
+  page::Slot targetSlot = page.getSlot(tupleCursor);
   uchar *tupleBody = page.readTupleBySlot(targetSlot);
   return tuple::Tuple(targetSlot.size, 0, tupleBody);
 }

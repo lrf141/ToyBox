@@ -69,8 +69,8 @@ class PageImpl {
     return page;
   }
 
-  page::Slot getSlot(uint64_t tupleId) {
-    return *reinterpret_cast<Slot *>(page.body + SLOT_SIZE * tupleId);
+  page::Slot getSlot(uint64_t tupleCursor) {
+    return *reinterpret_cast<Slot *>(page.body + SLOT_SIZE * tupleCursor);
   }
 
   uchar *readTupleBySlot(page::Slot slot) {
@@ -86,7 +86,7 @@ class PageHandler {
   static PageHandler reserveNewPage(page_id maxPageId);
   void flush(file_handler::FileDescriptor fd);
   void readFromFile(file_handler::FileDescriptor fd);
-  tuple::Tuple readTuple(uint64_t tupleId);
+  tuple::Tuple readTuple(uint64_t tupleCursor);
   void insert(tuple::Tuple t);
   bool isLastTuple(uint64_t tupleCursor);
   PageImpl& getPage() {
