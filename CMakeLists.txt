@@ -9,6 +9,7 @@ SET(TOYBOX_SRC
         file/file_handler.cc
         tablespace/tablespace.cc
         page/page.cc
+        buf/newbufpool.cc
         )
 
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/storage/toybox/include/)
